@@ -1,16 +1,10 @@
-# Các file biên dịch tự sinh của Maven
 target/
+nb-configuration.xml
+nbproject/
+.mtj.tmp/
+*.class
 *.war
 *.ear
 *.jar
-
-# Cấu hình riêng của NetBeans
-nbproject/private/
-build/
-nbbuild/
-dist/
-nb-configuration.xml
-
-# File hệ điều hành tự sinh
 Thumbs.db
 .DS_Store
