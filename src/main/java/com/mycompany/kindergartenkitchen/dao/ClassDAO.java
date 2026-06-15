@@ -198,4 +198,45 @@ public class ClassDAO extends DBContext {
         }
         return list;
     }
+
+    public List<ClassInfo> getClassesByTeacher(int teacherID) {
+        List<ClassInfo> list = new ArrayList<>();
+
+        String sql = "SELECT c.ClassID, c.ClassName, c.LevelID, l.LevelName, "
+                + "ISNULL(c.TeacherID, 0) AS TeacherID, "
+                + "ISNULL(u.FullName, N'Chưa có giáo viên') AS TeacherName, "
+                + "c.Status "
+                + "FROM Classes c "
+                + "JOIN Levels l ON c.LevelID = l.LevelID "
+                + "LEFT JOIN Users u ON c.TeacherID = u.UserID "
+                + "WHERE c.TeacherID = ? "
+                + "AND c.Status = 1 "
+                + "ORDER BY c.ClassName";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, teacherID);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ClassInfo classInfo = new ClassInfo(
+                            rs.getInt("ClassID"),
+                            rs.getString("ClassName"),
+                            rs.getInt("LevelID"),
+                            rs.getString("LevelName"),
+                            rs.getInt("TeacherID"),
+                            rs.getString("TeacherName"),
+                            rs.getBoolean("Status")
+                    );
+
+                    list.add(classInfo);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
 }
