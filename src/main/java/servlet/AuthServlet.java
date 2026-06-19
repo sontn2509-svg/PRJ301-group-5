@@ -17,7 +17,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@WebServlet(urlPatterns = {"/login", "/logout", "/forgot-password"})
+/*
+ Xử lý đăng nhập, đăng xuất, quên mật khẩu và trang chủ.
+  - Admin sau khi đăng nhập → chuyển đến /admin/dashboard
+  - Role khác sau khi đăng nhập → hiển thị trang chờ
+  - Quên mật khẩu: Bước 1 xác minh (username + email + phone), Bước 2 đặt lại mật khẩu
+  - Session lưu user với key "authUser"
+  - Mật khẩu lưu plain text (chưa mã hóa)
+ */
+@WebServlet(urlPatterns = {"/", "/login", "/logout", "/forgot-password"})
 public class AuthServlet extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAO();
@@ -28,10 +36,23 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         String path = request.getServletPath();
         switch (path) {
+            case "/" -> showHome(request, response);
             case "/logout" -> logout(request, response);
-            case "/forgot-password" -> request.getRequestDispatcher("/jsp/auth/forgot-password.jsp").forward(request, response);
+            case "/forgot-password" -> showForgotPassword(request, response);
             default -> showLogin(request, response);
         }
+    }
+
+    private void showHome(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User currentUser = ServletUtils.currentUser(request);
+
+        if (currentUser != null && "Admin".equalsIgnoreCase(currentUser.getRoleName())) {
+            response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            return;
+        }
+
+        request.getRequestDispatcher("/home.jsp").forward(request, response);
     }
 
     @Override
@@ -40,10 +61,26 @@ public class AuthServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         String path = request.getServletPath();
         if ("/forgot-password".equals(path)) {
-            resetPassword(request, response);
+            handleForgotPassword(request, response);
         } else {
             login(request, response);
         }
+    }
+
+    private void showForgotPassword(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String step = request.getParameter("step");
+        HttpSession session = request.getSession(false);
+
+        if ("2".equals(step) && session != null
+                && session.getAttribute("resetUserId") != null) {
+            request.setAttribute("userId", session.getAttribute("resetUserId"));
+            request.setAttribute("verifiedUsername", session.getAttribute("resetUsername"));
+            request.getRequestDispatcher("/jsp/auth/reset-password-form.jsp").forward(request, response);
+            return;
+        }
+
+        request.getRequestDispatcher("/jsp/auth/forgot-password.jsp").forward(request, response);
     }
 
     private void showLogin(HttpServletRequest request, HttpServletResponse response)
@@ -114,23 +151,31 @@ public class AuthServlet extends HttpServlet {
             session.invalidate();
         }
 
-        response.sendRedirect(request.getContextPath() + "/login");
+        response.sendRedirect(request.getContextPath() + "/");
     }
 
-    private void resetPassword(HttpServletRequest request, HttpServletResponse response)
+    private void handleForgotPassword(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String verified = ServletUtils.safeTrim(request.getParameter("verified"));
+
+        if ("true".equals(verified)) {
+            resetPasswordStep2(request, response);
+        } else {
+            resetPasswordStep1(request, response);
+        }
+    }
+
+    private void resetPasswordStep1(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String username = ServletUtils.safeTrim(request.getParameter("username"));
         String email = ServletUtils.safeTrim(request.getParameter("email"));
         String phone = ServletUtils.safeTrim(request.getParameter("phone"));
-        String newPassword = ServletUtils.safeTrim(request.getParameter("newPassword"));
-        String confirmPassword = ServletUtils.safeTrim(request.getParameter("confirmPassword"));
-
-        List<String> errors = validatePasswordReset(username, email, phone, newPassword, confirmPassword);
 
         request.setAttribute("username", username);
         request.setAttribute("email", email);
         request.setAttribute("phone", phone);
 
+        List<String> errors = validateAccountInfo(username, email, phone);
         if (!errors.isEmpty()) {
             request.setAttribute("errors", errors);
             request.getRequestDispatcher("/jsp/auth/forgot-password.jsp").forward(request, response);
@@ -139,26 +184,63 @@ public class AuthServlet extends HttpServlet {
 
         try {
             Optional<User> user = userDAO.findForPasswordReset(username, email, phone);
-
             if (user.isEmpty()) {
                 request.setAttribute("errors", List.of("Thông tin xác minh không khớp hoặc tài khoản đã bị khóa."));
                 request.getRequestDispatcher("/jsp/auth/forgot-password.jsp").forward(request, response);
                 return;
             }
 
-            userDAO.resetPassword(user.get().getUserId(), newPassword);
-            systemLogDAO.create(user.get().getUserId(), "RESET_PASSWORD", "Users", user.get().getUserId(),
-                    "Người dùng " + username + " lấy lại mật khẩu bằng email và số điện thoại");
+            HttpSession session = request.getSession(true);
+            session.setAttribute("resetUserId", user.get().getUserId());
+            session.setAttribute("resetUsername", user.get().getUsername());
 
-            request.setAttribute("success", "Đổi mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.");
-            request.getRequestDispatcher("/jsp/auth/forgot-password.jsp").forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/forgot-password?step=2");
+
         } catch (SQLException e) {
-            throw new ServletException("Không thể lấy lại mật khẩu", e);
+            throw new ServletException("Không thể xác minh tài khoản", e);
         }
     }
 
-    private List<String> validatePasswordReset(String username, String email, String phone,
-                                               String newPassword, String confirmPassword) {
+    private void resetPasswordStep2(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("resetUserId") == null) {
+            response.sendRedirect(request.getContextPath() + "/forgot-password");
+            return;
+        }
+
+        Integer userId = (Integer) session.getAttribute("resetUserId");
+        String username = (String) session.getAttribute("resetUsername");
+
+        String newPassword = ServletUtils.safeTrim(request.getParameter("newPassword"));
+        String confirmPassword = ServletUtils.safeTrim(request.getParameter("confirmPassword"));
+
+        List<String> errors = validateNewPassword(newPassword, confirmPassword);
+        if (!errors.isEmpty()) {
+            request.setAttribute("userId", userId);
+            request.setAttribute("verifiedUsername", username);
+            request.setAttribute("errors", errors);
+            request.getRequestDispatcher("/jsp/auth/reset-password-form.jsp").forward(request, response);
+            return;
+        }
+
+        try {
+            userDAO.resetPassword(userId, newPassword);
+            systemLogDAO.create(userId, "RESET_PASSWORD", "Users", userId,
+                    "Người dùng " + username + " lấy lại mật khẩu");
+
+            session.removeAttribute("resetUserId");
+            session.removeAttribute("resetUsername");
+
+            request.setAttribute("success", "Đổi mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.");
+            request.getRequestDispatcher("/jsp/auth/forgot-password.jsp").forward(request, response);
+
+        } catch (SQLException e) {
+            throw new ServletException("Không thể lưu mật khẩu mới", e);
+        }
+    }
+
+    private List<String> validateAccountInfo(String username, String email, String phone) {
         List<String> errors = new ArrayList<>();
 
         if (username.isBlank()) {
@@ -178,6 +260,11 @@ public class AuthServlet extends HttpServlet {
         if (phoneError != null) {
             errors.add(phoneError);
         }
+        return errors;
+    }
+
+    private List<String> validateNewPassword(String newPassword, String confirmPassword) {
+        List<String> errors = new ArrayList<>();
         if (newPassword.length() < 6) {
             errors.add("Mật khẩu mới phải có ít nhất 6 ký tự.");
         }

@@ -13,6 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/*
+  Data Access Object cho bảng Users.
+  - Tất cả các phương thức đều sử dụng try-with-resources để đóng Connection tự động
+  - Mật khẩu được lưu plain text (chưa mã hóa)
+  - User Status: 0 = Pending, 1 = Active, 2 = Blocked
+  - authenticate() chỉ đăng nhập user có Status = 1 (Active)
+* - RoleID = 1 là Admin (chỉ có 1 tài khoản Admin duy nhất)
+ */
 public class UserDAO {
 
     public Optional<User> authenticate(String username, String password) throws SQLException {

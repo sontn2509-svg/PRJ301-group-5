@@ -7,6 +7,14 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+/*
+  Kết nối database SQL Server.
+  - File db.properties phải đặt trong src/main/resources/
+  - Các trường db.properties: db.url, db.username, db.password
+  - Driver SQL Server (com.microsoft.sqlserver.jdbc.SQLServerDriver) đã được load trong static block
+  - Connection không tự động đóng, cần dùng try-with-resources hoặc đóng thủ công
+  - Nếu db.properties không tìm thấy sẽ ném IllegalStateException khi khởi động ứng dụng
+ */
 public final class DBConnection {
 
     private static final Properties PROPERTIES = new Properties();

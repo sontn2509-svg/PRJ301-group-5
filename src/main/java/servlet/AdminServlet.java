@@ -12,6 +12,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 
+/*
+  Trang Dashboard và Logs cho Admin.
+  LƯU Ý QUAN TRỌNG:
+  - Chỉ Admin mới được truy cập (qua AdminFilter)
+  - Dashboard hiển thị: tổng user, user active, blocked, pending + logs gần nhất
+  - Logs hiển thị 100 bản ghi gần nhất, có tìm kiếm theo action/description
+ */
 @WebServlet(urlPatterns = {"/admin/dashboard", "/admin/logs"})
 public class AdminServlet extends HttpServlet {
 
@@ -40,7 +47,7 @@ public class AdminServlet extends HttpServlet {
         request.setAttribute("blockedUsers", userDAO.countBlocked());
         request.setAttribute("pendingUsers", userDAO.countPending());
         request.setAttribute("latestLogs", systemLogDAO.findLatest("", 8));
-        request.getRequestDispatcher("/jsp/auth/dashboard.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/admin/dashboard.jsp").forward(request, response);
     }
 
     private void showLogs(HttpServletRequest request, HttpServletResponse response)
@@ -48,6 +55,6 @@ public class AdminServlet extends HttpServlet {
         String keyword = ServletUtils.safeTrim(request.getParameter("keyword"));
         request.setAttribute("keyword", keyword);
         request.setAttribute("logs", systemLogDAO.findLatest(keyword, 100));
-        request.getRequestDispatcher("/jsp/auth/log-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/admin/log-list.jsp").forward(request, response);
     }
 }

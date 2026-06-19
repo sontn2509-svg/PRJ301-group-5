@@ -11,6 +11,14 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+  Data Access Object cho bảng SystemLogs.
+  - UserID có thể null (nếu action không liên quan đến user cụ thể)
+  - RecordID có thể null (nếu action không liên quan đến bản ghi cụ thể)
+  - CreatedAt tự động được tạo bởi database (GETDATE())
+  - Các action thường dùng: LOGIN, LOGOUT, CREATE_USER, UPDATE_USER, DELETE_USER, 
+    TOGGLE_USER_STATUS, CHANGE_PASSWORD, RESET_PASSWORD
+ */
 public class SystemLogDAO {
 
     public void create(Integer userId, String action, String tableName, Integer recordId, String description) throws SQLException {

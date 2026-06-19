@@ -2,6 +2,13 @@ package model;
 
 import java.time.LocalDateTime;
 
+/*
+  Model cho bảng SystemLogs - ghi nhận các hoạt động trong hệ thống. 
+  - userId có thể null (action hệ thống)
+  - recordId có thể null (action không liên quan bản ghi)
+  - Các action phổ biến: LOGIN, LOGOUT, CREATE_USER, UPDATE_USER, 
+    DELETE_USER, TOGGLE_USER_STATUS, CHANGE_PASSWORD, RESET_PASSWORD
+ */
 public class SystemLog {
     private int logId;
     private Integer userId;

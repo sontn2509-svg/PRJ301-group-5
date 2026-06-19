@@ -2,6 +2,15 @@ package model;
 
 import java.time.LocalDateTime;
 
+/*
+  Model cho bảng Users. 
+  LƯU Ý QUAN TRỌNG:
+  - Status: 0 = Pending, 1 = Active, 2 = Blocked
+  - RoleID: 1 = Admin, các role khác do module khác xử lý
+  - Password lưu plain text (chưa mã hóa)
+  - Email và Phone có thể null
+  - createdAt tự động tạo bởi database
+ */
 public class User {
     private int userId;
     private String username;

@@ -1,17 +1,17 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quên mật khẩu - KindergartenKitchen</title>
+    <title>Đặt lại mật khẩu - KindergartenKitchen</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -82,37 +82,17 @@
             font-size: 32px;
             color: #a78bfa;
             backdrop-filter: blur(10px);
-            animation: fadeInUp 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), inset 0 0 20px rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
         }
         
-        .login-header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: #ffffff;
-            animation: fadeInUp 0.6s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
+        .login-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: #ffffff; }
+        .login-header p { color: #71717a; font-size: 13px; font-weight: 500; }
         
-        .login-header p {
-            color: #71717a;
-            font-size: 13px;
-            font-weight: 500;
-            animation: fadeInUp 0.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
+        .login-body { padding: 32px; }
         
-        .login-body {
-            padding: 32px;
-            animation: fadeInUp 0.6s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
+        .alert-card { border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px; font-size: 13px; font-weight: 500; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; }
+        .alert-card i { font-size: 18px; margin-top: 2px; }
         
-        /* Alert */
-        .alert-card { border-radius: 12px; padding: 14px 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; border: 1px solid; }
-        .alert-card.danger { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; }
-        .alert-card.success { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); color: #86efac; }
-        .alert-card i { font-size: 18px; }
-        
-        /* Form */
         .form-group { margin-bottom: 20px; }
         .form-label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #71717a; margin-bottom: 10px; }
         .form-label i { color: #a78bfa; margin-right: 6px; }
@@ -120,7 +100,6 @@
         .form-control::placeholder { color: #52525b; }
         .form-control:focus { border-color: rgba(139, 92, 246, 0.6); background: rgba(139, 92, 246, 0.05); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
         
-        /* Button */
         .btn-login { width: 100%; padding: 14px; background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white; border: none; border-radius: 10px; font-family: 'Segoe UI', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3); }
         .btn-login:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -5px rgba(139, 92, 246, 0.5); }
         
@@ -131,22 +110,15 @@
 <body>
     <div class="login-card">
         <div class="login-header">
-            <div class="login-logo"><i class="fas fa-key"></i></div>
-            <h1>Lấy lại mật khẩu</h1>
-            <p>Xác minh thông tin tài khoản để tiếp tục</p>
+            <div class="login-logo"><i class="fas fa-shield-halved"></i></div>
+            <h1>Đặt lại mật khẩu</h1>
+            <p>Xác minh thành công. Nhập mật khẩu mới cho <strong>${verifiedUsername}</strong></p>
         </div>
 
         <div class="login-body">
-            <c:if test="${not empty success}">
-                <div class="alert-card success">
-                    <i class="fas fa-check-circle"></i>
-                    <span>${success}</span>
-                </div>
-            </c:if>
-
             <c:if test="${not empty errors}">
-                <div class="alert-card danger">
-                    <i class="fas fa-circle-exclamation"></i>
+                <div class="alert-card">
+                    <i class="fas fa-exclamation-circle"></i>
                     <div>
                         <c:forEach var="error" items="${errors}">
                             <div>• <c:out value="${error}"/></div>
@@ -156,23 +128,21 @@
             </c:if>
 
             <form method="post" action="${pageContext.request.contextPath}/forgot-password">
+                <input type="hidden" name="verified" value="true">
+                <input type="hidden" name="userId" value="${userId}">
+
                 <div class="form-group">
-                    <label class="form-label"><i class="fas fa-user"></i> Tên đăng nhập</label>
-                    <input type="text" name="username" value="${username}" class="form-control" required autofocus placeholder="Nhập tên đăng nhập">
+                    <label class="form-label"><i class="fas fa-key"></i> Mật khẩu mới</label>
+                    <input type="password" name="newPassword" class="form-control" minlength="6" required autofocus placeholder="Ít nhất 6 ký tự">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label"><i class="fas fa-envelope"></i> Email</label>
-                    <input type="email" name="email" value="${email}" class="form-control" required placeholder="Nhập địa chỉ email">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label"><i class="fas fa-phone"></i> Số điện thoại</label>
-                    <input type="text" name="phone" value="${phone}" class="form-control" required placeholder="Nhập số điện thoại">
+                    <label class="form-label"><i class="fas fa-check-double"></i> Xác nhận mật khẩu</label>
+                    <input type="password" name="confirmPassword" class="form-control" minlength="6" required placeholder="Nhập lại mật khẩu mới">
                 </div>
 
                 <button type="submit" class="btn-login">
-                    <i class="fas fa-search"></i> Xác minh tài khoản
+                    <i class="fas fa-floppy-disk"></i> Lưu mật khẩu mới
                 </button>
 
                 <a href="${pageContext.request.contextPath}/login" class="back-link">

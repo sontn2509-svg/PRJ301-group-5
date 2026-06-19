@@ -10,6 +10,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+  Data Access Object cho bảng Roles.
+  - Hiện tại chỉ có 1 phương thức findAll() để lấy danh sách vai trò
+  - Roles được sắp xếp theo RoleID tăng dần
+  - RoleID = 1 luôn là Admin
+ */
 public class RoleDAO {
 
     public List<Role> findAll() throws SQLException {

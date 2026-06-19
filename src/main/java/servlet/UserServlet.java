@@ -17,6 +17,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/*
+  Quản lý người dùng (Admin only).
+  URL PATTERNS:
+  - /admin/users → Danh sách người dùng (có tìm kiếm, lọc theo role/status)
+  - /admin/users/create → Form tạo người dùng mới
+  - /admin/users/edit → Form chỉnh sửa người dùng
+  - /admin/users/toggle → Đổi trạng thái (kích hoạt/khóa)
+  - /admin/users/delete → Xóa người dùng
+  
+  - Chỉ Admin mới được truy cập (qua AdminFilter)
+  - Không thể tạo thêm tài khoản Admin (RoleID = 1) - chỉ có 1 Admin
+  - Không thể xóa tài khoản Admin
+  - Không thể xóa tài khoản của chính mình
+  - Toggle status: RoleID = 1 (Admin) không được phép toggle
+  - Tất cả thao tác đều được ghi log vào SystemLogs
+ */
 @WebServlet(urlPatterns = {
         "/admin/users",
         "/admin/users/create",
@@ -77,7 +93,7 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("selectedRoleId", roleId);
         request.setAttribute("selectedStatus", status);
         moveFlash(request);
-        request.getRequestDispatcher("/jsp/auth/user-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/admin/user-list.jsp").forward(request, response);
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
@@ -85,7 +101,7 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("formAction", request.getContextPath() + "/admin/users/create");
         request.setAttribute("roles", roleDAO.findAll());
         request.setAttribute("userForm", new User());
-        request.getRequestDispatcher("/jsp/auth/user-form.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/admin/user-form.jsp").forward(request, response);
     }
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
@@ -100,7 +116,7 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("roles", roleDAO.findAll());
         request.setAttribute("userForm", user.get());
         request.setAttribute("editMode", true);
-        request.getRequestDispatcher("/jsp/auth/user-form.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/admin/user-form.jsp").forward(request, response);
     }
 
     private void createUser(HttpServletRequest request, HttpServletResponse response)
@@ -305,7 +321,7 @@ public class UserServlet extends HttpServlet {
                 ? request.getContextPath() + "/admin/users/edit?id=" + form.getUserId()
                 : request.getContextPath() + "/admin/users/create";
         request.setAttribute("formAction", action);
-        request.getRequestDispatcher("/jsp/auth/user-form.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/admin/user-form.jsp").forward(request, response);
     }
 
     private Integer parseNullableInt(String raw) {

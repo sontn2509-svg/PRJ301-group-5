@@ -16,6 +16,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+  - Yêu cầu user phải đăng nhập (AuthFilter)
+  - Mật khẩu mới phải khác mật khẩu hiện tại
+  - Mật khẩu mới tối thiểu 6 ký tự
+  - Sau đổi thành công, cập nhật lại session user
+  - Thao tác được ghi log vào SystemLogs
+ */
 @WebServlet(urlPatterns = {"/admin/change-password"})
 public class ChangePasswordServlet extends HttpServlet {
 

@@ -1,5 +1,10 @@
 package model;
 
+/*
+  Model cho bảng Roles.
+  - RoleID = 1 luôn là Admin
+  - Các role khác (2, 3, ...) sẽ được triển khai bởi module khác
+ */
 public class Role {
     private int roleId;
     private String roleName;
