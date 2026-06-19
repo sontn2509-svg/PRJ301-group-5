@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SystemLogDAO {
+
     public void create(Integer userId, String action, String tableName, Integer recordId, String description) throws SQLException {
         String sql = """
                 INSERT INTO SystemLogs(UserID, Action, TableName, RecordID, Description)
@@ -82,4 +83,3 @@ public class SystemLogDAO {
         return log;
     }
 }
-

@@ -19,6 +19,7 @@ import java.util.Optional;
 
 @WebServlet(urlPatterns = {"/login", "/logout", "/forgot-password"})
 public class AuthServlet extends HttpServlet {
+
     private final UserDAO userDAO = new UserDAO();
     private final SystemLogDAO systemLogDAO = new SystemLogDAO();
 
@@ -48,16 +49,19 @@ public class AuthServlet extends HttpServlet {
     private void showLogin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         User currentUser = ServletUtils.currentUser(request);
+
         if (currentUser != null && "Admin".equalsIgnoreCase(currentUser.getRoleName())) {
             response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             return;
         }
+
         if (currentUser != null) {
             request.setAttribute("message", "Bạn đang đăng nhập với role " + currentUser.getRoleName()
                     + ". Module role này sẽ do thành viên khác triển khai.");
             request.getRequestDispatcher("/jsp/auth/role-waiting.jsp").forward(request, response);
             return;
         }
+
         request.getRequestDispatcher("/jsp/auth/login.jsp").forward(request, response);
     }
 
@@ -68,6 +72,7 @@ public class AuthServlet extends HttpServlet {
 
         try {
             Optional<User> authenticated = userDAO.authenticate(username, password);
+
             if (authenticated.isEmpty()) {
                 request.setAttribute("error", "Sai tên đăng nhập, mật khẩu hoặc tài khoản đã bị khóa.");
                 request.setAttribute("username", username);
@@ -103,10 +108,12 @@ public class AuthServlet extends HttpServlet {
                 throw new ServletException("Không thể ghi log đăng xuất", e);
             }
         }
+
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();
         }
+
         response.sendRedirect(request.getContextPath() + "/login");
     }
 
@@ -119,6 +126,7 @@ public class AuthServlet extends HttpServlet {
         String confirmPassword = ServletUtils.safeTrim(request.getParameter("confirmPassword"));
 
         List<String> errors = validatePasswordReset(username, email, phone, newPassword, confirmPassword);
+
         request.setAttribute("username", username);
         request.setAttribute("email", email);
         request.setAttribute("phone", phone);
@@ -131,6 +139,7 @@ public class AuthServlet extends HttpServlet {
 
         try {
             Optional<User> user = userDAO.findForPasswordReset(username, email, phone);
+
             if (user.isEmpty()) {
                 request.setAttribute("errors", List.of("Thông tin xác minh không khớp hoặc tài khoản đã bị khóa."));
                 request.getRequestDispatcher("/jsp/auth/forgot-password.jsp").forward(request, response);
@@ -140,6 +149,7 @@ public class AuthServlet extends HttpServlet {
             userDAO.resetPassword(user.get().getUserId(), newPassword);
             systemLogDAO.create(user.get().getUserId(), "RESET_PASSWORD", "Users", user.get().getUserId(),
                     "Người dùng " + username + " lấy lại mật khẩu bằng email và số điện thoại");
+
             request.setAttribute("success", "Đổi mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.");
             request.getRequestDispatcher("/jsp/auth/forgot-password.jsp").forward(request, response);
         } catch (SQLException e) {
@@ -150,14 +160,23 @@ public class AuthServlet extends HttpServlet {
     private List<String> validatePasswordReset(String username, String email, String phone,
                                                String newPassword, String confirmPassword) {
         List<String> errors = new ArrayList<>();
+
         if (username.isBlank()) {
             errors.add("Tên đăng nhập không được để trống.");
         }
         if (email.isBlank()) {
             errors.add("Email không được để trống.");
         }
+        String emailError = validateEmail(email);
+        if (emailError != null) {
+            errors.add(emailError);
+        }
         if (phone.isBlank()) {
             errors.add("Số điện thoại không được để trống.");
+        }
+        String phoneError = validateVietnamPhone(phone);
+        if (phoneError != null) {
+            errors.add(phoneError);
         }
         if (newPassword.length() < 6) {
             errors.add("Mật khẩu mới phải có ít nhất 6 ký tự.");
@@ -166,5 +185,50 @@ public class AuthServlet extends HttpServlet {
             errors.add("Xác nhận mật khẩu không khớp.");
         }
         return errors;
+    }
+
+    private String validateEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        String emailRegex = "^[a-zA-Z][a-zA-Z0-9._-]{5,29}@gmail\\.com$";
+        if (!email.matches(emailRegex)) {
+            return "Email phải có định dạng Gmail hợp lệ (ví dụ: example@gmail.com, ex.am-ple@gmail.com).";
+        }
+        if (email.matches(".*[._-]{2,}.*")) {
+            return "Email không được chứa dấu chấm, gạch dưới hoặc gạch ngang liền nhau.";
+        }
+        String localPart = email.split("@")[0];
+        if (localPart.endsWith(".") || localPart.endsWith("_") || localPart.endsWith("-")) {
+            return "Email không được bắt đầu hoặc kết thúc bằng dấu chấm, gạch dưới, hoặc gạch ngang.";
+        }
+        return null;
+    }
+
+    private String validateVietnamPhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return null;
+        }
+        phone = phone.trim();
+        if (!phone.startsWith("0")) {
+            return "Số điện thoại phải bắt đầu bằng số 0 (ví dụ: 0912345678).";
+        }
+        if (!phone.matches("\\d{10,11}")) {
+            return "Số điện thoại phải có 10 hoặc 11 chữ số (ví dụ: 0912345678).";
+        }
+        String prefix = phone.substring(1, 3);
+        boolean validPrefix = false;
+        switch (prefix) {
+            case "32","33","34","35","36","37","38","39",
+                 "52","53","54","55","56","57","58","59",
+                 "70","71","72","76","77","78","79",
+                 "81","82","83","84","85","86","87","88","89",
+                 "90","91","92","93","94","95","96","97","98","99"
+                 -> validPrefix = true;
+        }
+        if (!validPrefix) {
+            return "Số điện thoại có đầu số không hợp lệ. Đầu số phải thuộc: 03x, 05x, 07x, 08x, 09x.";
+        }
+        return null;
     }
 }

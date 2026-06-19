@@ -14,6 +14,7 @@ import java.sql.SQLException;
 
 @WebServlet(urlPatterns = {"/admin/dashboard", "/admin/logs"})
 public class AdminServlet extends HttpServlet {
+
     private final UserDAO userDAO = new UserDAO();
     private final SystemLogDAO systemLogDAO = new SystemLogDAO();
 

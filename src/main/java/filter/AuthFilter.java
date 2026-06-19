@@ -15,15 +15,18 @@ import java.io.IOException;
 
 @WebFilter("/*")
 public class AuthFilter implements Filter {
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+
         String contextPath = httpRequest.getContextPath();
         String uri = httpRequest.getRequestURI();
 
-        boolean publicResource = uri.equals(contextPath + "/login")
+        boolean publicResource =
+                uri.equals(contextPath + "/login")
                 || uri.equals(contextPath + "/forgot-password")
                 || uri.startsWith(contextPath + "/assets/")
                 || uri.startsWith(contextPath + "/favicon");
@@ -35,6 +38,7 @@ public class AuthFilter implements Filter {
 
         HttpSession session = httpRequest.getSession(false);
         User user = session == null ? null : (User) session.getAttribute("authUser");
+
         if (user == null) {
             httpResponse.sendRedirect(contextPath + "/login");
             return;
@@ -43,4 +47,3 @@ public class AuthFilter implements Filter {
         chain.doFilter(request, response);
     }
 }
-

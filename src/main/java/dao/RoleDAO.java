@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RoleDAO {
+
     public List<Role> findAll() throws SQLException {
         String sql = "SELECT RoleID, RoleName FROM Roles ORDER BY RoleID";
         List<Role> roles = new ArrayList<>();
@@ -24,4 +25,3 @@ public class RoleDAO {
         return roles;
     }
 }
-

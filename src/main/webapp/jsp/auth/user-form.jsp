@@ -132,11 +132,18 @@
                                     <select name="roleId" class="form-control form-select" required>
                                         <option value="">-- Chọn vai trò --</option>
                                         <c:forEach var="role" items="${roles}">
-                                            <option value="${role.roleId}" ${userForm.roleId == role.roleId ? 'selected' : ''}>
-                                                <c:out value="${role.roleName}"/>
-                                            </option>
+                                            <c:if test="${editMode || role.roleId != 1}">
+                                                <option value="${role.roleId}" ${userForm.roleId == role.roleId ? 'selected' : ''}>
+                                                    <c:out value="${role.roleName}"/>
+                                                </option>
+                                            </c:if>
                                         </c:forEach>
                                     </select>
+                                    <c:if test="${not editMode}">
+                                        <small style="color: var(--text-light); font-size: 12px; margin-top: 4px; display: block;">
+                                            <i class="fas fa-info-circle"></i> Chỉ có duy nhất 1 tài khoản Admin trong hệ thống
+                                        </small>
+                                    </c:if>
                                 </div>
 
                                 <div class="form-group">

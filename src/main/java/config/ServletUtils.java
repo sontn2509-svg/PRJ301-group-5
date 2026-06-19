@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 public final class ServletUtils {
+
     private ServletUtils() {
     }
 
@@ -20,4 +21,3 @@ public final class ServletUtils {
         return value == null ? "" : value.trim();
     }
 }
-

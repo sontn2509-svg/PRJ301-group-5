@@ -85,4 +85,3 @@ public class SystemLog {
         this.createdAt = createdAt;
     }
 }
-

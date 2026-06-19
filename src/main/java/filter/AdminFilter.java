@@ -14,19 +14,21 @@ import java.io.IOException;
 
 @WebFilter("/admin/*")
 public class AdminFilter implements Filter {
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+
         User user = (User) httpRequest.getSession().getAttribute("authUser");
 
         if (user == null || !"Admin".equalsIgnoreCase(user.getRoleName())) {
-            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập chức năng Admin.");
+            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Bạn không có quyền truy cập chức năng Admin.");
             return;
         }
 
         chain.doFilter(request, response);
     }
 }
-

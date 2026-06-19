@@ -160,16 +160,23 @@
                                             </td>
                                             <td>
                                                 <div style="display: flex; gap: 8px;">
-                                                    <a href="${pageContext.request.contextPath}/admin/users/edit?id=${user.userId}" 
+                                                    <a href="${pageContext.request.contextPath}/admin/users/edit?id=${user.userId}"
                                                        class="btn btn-outline btn-sm" title="Sửa">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     <c:if test="${user.roleId != 1}">
-                                                        <a href="${pageContext.request.contextPath}/admin/users/toggle?id=${user.userId}" 
-                                                           class="btn btn-sm ${user.status == 1 ? 'btn-accent' : 'btn-primary'}" 
+                                                        <a href="${pageContext.request.contextPath}/admin/users/toggle?id=${user.userId}"
+                                                           class="btn btn-sm ${user.status == 1 ? 'btn-accent' : 'btn-primary'}"
                                                            title="${user.status == 1 ? 'Khóa' : 'Mở khóa'}">
                                                             <i class="fas ${user.status == 1 ? 'fa-lock' : 'fa-unlock'}"></i>
                                                         </a>
+                                                    </c:if>
+                                                    <c:if test="${user.roleId != 1}">
+                                                        <button type="button" class="btn btn-danger btn-sm"
+                                                                onclick="confirmDelete('${user.username}', '${user.userId}')"
+                                                                title="Xóa">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
                                                     </c:if>
                                                 </div>
                                             </td>
@@ -200,6 +207,12 @@
         const today = new Date();
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         dateElement.textContent = today.toLocaleDateString('vi-VN', options);
+
+        function confirmDelete(username, userId) {
+            if (confirm('Bạn có chắc chắn muốn xóa tài khoản "' + username + '" không?\nHành động này không thể hoàn tác.')) {
+                window.location.href = '${pageContext.request.contextPath}/admin/users/delete?id=' + userId;
+            }
+        }
     </script>
 </body>
 </html>

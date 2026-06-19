@@ -21,9 +21,11 @@ import java.util.Optional;
         "/admin/users",
         "/admin/users/create",
         "/admin/users/edit",
-        "/admin/users/toggle"
+        "/admin/users/toggle",
+        "/admin/users/delete"
 })
 public class UserServlet extends HttpServlet {
+
     private final UserDAO userDAO = new UserDAO();
     private final RoleDAO roleDAO = new RoleDAO();
     private final SystemLogDAO systemLogDAO = new SystemLogDAO();
@@ -37,6 +39,7 @@ public class UserServlet extends HttpServlet {
                 case "/admin/users/create" -> showCreateForm(request, response);
                 case "/admin/users/edit" -> showEditForm(request, response);
                 case "/admin/users/toggle" -> toggleStatus(request, response);
+                case "/admin/users/delete" -> deleteUser(request, response);
                 default -> showList(request, response);
             }
         } catch (SQLException e) {
@@ -113,6 +116,7 @@ public class UserServlet extends HttpServlet {
         User admin = ServletUtils.currentUser(request);
         systemLogDAO.create(admin.getUserId(), "CREATE_USER", "Users", newId,
                 "Admin tạo tài khoản " + form.getUsername());
+
         request.getSession().setAttribute("flash", "Đã tạo tài khoản " + form.getUsername() + ".");
         response.sendRedirect(request.getContextPath() + "/admin/users");
     }
@@ -130,6 +134,7 @@ public class UserServlet extends HttpServlet {
         form.setUserId(id);
         form.setUsername(existing.get().getUsername());
         boolean changePassword = !ServletUtils.safeTrim(form.getPassword()).isEmpty();
+
         List<String> errors = validate(form, false, id);
         if (!errors.isEmpty()) {
             forwardFormWithErrors(request, response, form, errors, true);
@@ -140,6 +145,7 @@ public class UserServlet extends HttpServlet {
         User admin = ServletUtils.currentUser(request);
         systemLogDAO.create(admin.getUserId(), "UPDATE_USER", "Users", id,
                 "Admin cập nhật tài khoản " + form.getUsername());
+
         request.getSession().setAttribute("flash", "Đã cập nhật tài khoản " + form.getUsername() + ".");
         response.sendRedirect(request.getContextPath() + "/admin/users");
     }
@@ -148,6 +154,7 @@ public class UserServlet extends HttpServlet {
             throws SQLException, IOException {
         int id = parseRequiredId(request);
         Optional<User> target = userDAO.findById(id);
+
         if (target.isPresent() && target.get().getRoleId() != 1) {
             userDAO.toggleStatus(id);
             User admin = ServletUtils.currentUser(request);
@@ -155,6 +162,41 @@ public class UserServlet extends HttpServlet {
                     "Admin đổi trạng thái tài khoản " + target.get().getUsername());
             request.getSession().setAttribute("flash", "Đã đổi trạng thái tài khoản " + target.get().getUsername() + ".");
         }
+        response.sendRedirect(request.getContextPath() + "/admin/users");
+    }
+
+    private void deleteUser(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        int id = parseRequiredId(request);
+        Optional<User> target = userDAO.findById(id);
+
+        if (target.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/admin/users");
+            return;
+        }
+
+        User admin = ServletUtils.currentUser(request);
+
+        if (target.get().getRoleId() == 1) {
+            request.getSession().setAttribute("flash", "Không thể xóa tài khoản Admin.");
+            response.sendRedirect(request.getContextPath() + "/admin/users");
+            return;
+        }
+
+        if (admin != null && admin.getUserId() == id) {
+            request.getSession().setAttribute("flash", "Bạn không thể xóa tài khoản của chính mình.");
+            response.sendRedirect(request.getContextPath() + "/admin/users");
+            return;
+        }
+
+        String deletedUsername = target.get().getUsername();
+        int deletedId = target.get().getUserId();
+
+        userDAO.delete(id);
+        systemLogDAO.create(admin.getUserId(), "DELETE_USER", "Users", deletedId,
+                "Admin xóa tài khoản " + deletedUsername);
+
+        request.getSession().setAttribute("flash", "Đã xóa tài khoản " + deletedUsername + ".");
         response.sendRedirect(request.getContextPath() + "/admin/users");
     }
 
@@ -174,6 +216,7 @@ public class UserServlet extends HttpServlet {
 
     private List<String> validate(User user, boolean createMode, Integer exceptUserId) throws SQLException {
         List<String> errors = new ArrayList<>();
+
         if (createMode && user.getUsername().isBlank()) {
             errors.add("Tên đăng nhập không được để trống.");
         }
@@ -189,14 +232,70 @@ public class UserServlet extends HttpServlet {
         if (user.getRoleId() <= 0) {
             errors.add("Vui lòng chọn vai trò.");
         }
+        if (createMode && user.getRoleId() == 1) {
+            errors.add("Không thể tạo thêm tài khoản Admin. Hệ thống chỉ cho phép duy nhất 1 tài khoản Admin.");
+        }
         if (user.getStatus() < 0 || user.getStatus() > 2) {
             errors.add("Trạng thái tài khoản không hợp lệ.");
+        }
+        String emailValidation = validateEmail(user.getEmail());
+        if (emailValidation != null) {
+            errors.add(emailValidation);
+        }
+        String phoneValidation = validateVietnamPhone(user.getPhone());
+        if (phoneValidation != null) {
+            errors.add(phoneValidation);
         }
         return errors;
     }
 
+    private String validateEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        String emailRegex = "^[a-zA-Z][a-zA-Z0-9._-]{5,29}@gmail\\.com$";
+        if (!email.matches(emailRegex)) {
+            return "Email phải có định dạng Gmail hợp lệ (ví dụ: example@gmail.com, ex.am-ple@gmail.com).";
+        }
+        if (email.matches(".*[._-]{2,}.*")) {
+            return "Email không được chứa dấu chấm, gạch dưới hoặc gạch ngang liền nhau.";
+        }
+        String localPart = email.split("@")[0];
+        if (localPart.endsWith(".") || localPart.endsWith("_") || localPart.endsWith("-")) {
+            return "Email không được bắt đầu hoặc kết thúc bằng dấu chấm, gạch dưới, hoặc gạch ngang.";
+        }
+        return null;
+    }
+
+    private String validateVietnamPhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return null;
+        }
+        phone = phone.trim();
+        if (!phone.startsWith("0")) {
+            return "Số điện thoại phải bắt đầu bằng số 0 (ví dụ: 0912345678).";
+        }
+        if (!phone.matches("\\d{10,11}")) {
+            return "Số điện thoại phải có 10 hoặc 11 chữ số (ví dụ: 0912345678).";
+        }
+        String prefix = phone.substring(1, 3);
+        boolean validPrefix = false;
+        switch (prefix) {
+            case "32","33","34","35","36","37","38","39",
+                 "52","53","54","55","56","57","58","59",
+                 "70","71","72","76","77","78","79",
+                 "81","82","83","84","85","86","87","88","89",
+                 "90","91","92","93","94","95","96","97","98","99"
+                 -> validPrefix = true;
+        }
+        if (!validPrefix) {
+            return "Số điện thoại có đầu số không hợp lệ. Đầu số phải thuộc: 03x, 05x, 07x, 08x, 09x.";
+        }
+        return null;
+    }
+
     private void forwardFormWithErrors(HttpServletRequest request, HttpServletResponse response, User form,
-                                       List<String> errors, boolean editMode)
+                                      List<String> errors, boolean editMode)
             throws SQLException, ServletException, IOException {
         request.setAttribute("errors", errors);
         request.setAttribute("roles", roleDAO.findAll());
@@ -237,4 +336,3 @@ public class UserServlet extends HttpServlet {
         }
     }
 }
-

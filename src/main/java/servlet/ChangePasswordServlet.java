@@ -18,6 +18,7 @@ import java.util.List;
 
 @WebServlet(urlPatterns = {"/admin/change-password"})
 public class ChangePasswordServlet extends HttpServlet {
+
     private final UserDAO userDAO = new UserDAO();
     private final SystemLogDAO systemLogDAO = new SystemLogDAO();
 
@@ -31,6 +32,7 @@ public class ChangePasswordServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+
         String currentPassword = ServletUtils.safeTrim(request.getParameter("currentPassword"));
         String newPassword = ServletUtils.safeTrim(request.getParameter("newPassword"));
         String confirmPassword = ServletUtils.safeTrim(request.getParameter("confirmPassword"));
@@ -74,6 +76,7 @@ public class ChangePasswordServlet extends HttpServlet {
 
     private List<String> validate(String currentPassword, String newPassword, String confirmPassword) {
         List<String> errors = new ArrayList<>();
+
         if (currentPassword.isBlank()) {
             errors.add("Mật khẩu hiện tại không được để trống.");
         }

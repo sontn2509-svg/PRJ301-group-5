@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class UserDAO {
+
     public Optional<User> authenticate(String username, String password) throws SQLException {
         String sql = """
                 SELECT u.UserID, u.Username, u.Password, u.FullName, u.Email, u.Phone,
@@ -194,6 +195,15 @@ public class UserDAO {
         }
     }
 
+    public void delete(int userId) throws SQLException {
+        String sql = "DELETE FROM Users WHERE UserID = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            statement.executeUpdate();
+        }
+    }
+
     public boolean usernameExists(String username, Integer exceptUserId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM Users WHERE Username = ? AND (? IS NULL OR UserID <> ?)";
         try (Connection connection = DBConnection.getConnection();
@@ -213,6 +223,17 @@ public class UserDAO {
              PreparedStatement statement = connection.prepareStatement(sql)) {
             setNullableInt(statement, 1, status);
             setNullableInt(statement, 2, status);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getInt(1) : 0;
+            }
+        }
+    }
+
+    public int countByRole(int roleId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Users WHERE RoleID = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, roleId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? resultSet.getInt(1) : 0;
             }
@@ -258,4 +279,3 @@ public class UserDAO {
         return user;
     }
 }
-
