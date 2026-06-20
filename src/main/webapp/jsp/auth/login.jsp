@@ -17,20 +17,20 @@
             align-items: center;
             justify-content: center;
             padding: 24px;
-            background: #0a0a0f;
+            background: #fffbf5;
             position: relative;
             overflow: hidden;
         }
         
-        /* Animated background */
+        /* Animated background circles */
         body::before {
             content: '';
             position: absolute;
             inset: 0;
             background: 
-                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(120, 119, 198, 0.15), transparent),
-                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(167, 139, 250, 0.1), transparent),
-                radial-gradient(ellipse 40% 30% at 50% 80%, rgba(139, 92, 246, 0.08), transparent);
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(251, 146, 60, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(253, 186, 116, 0.12), transparent),
+                radial-gradient(ellipse 40% 30% at 50% 80%, rgba(249, 115, 22, 0.08), transparent);
             animation: bgPulse 8s ease-in-out infinite;
         }
         
@@ -45,15 +45,15 @@
             position: absolute;
             inset: 0;
             background-image: 
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+                linear-gradient(rgba(249, 115, 22, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(249, 115, 22, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
             pointer-events: none;
         }
         
         .login-card {
-            background: rgba(15, 15, 20, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #ffffff;
+            border: 1px solid rgba(249, 115, 22, 0.1);
             border-radius: 20px;
             overflow: hidden;
             width: 100%;
@@ -61,11 +61,9 @@
             position: relative;
             z-index: 1;
             animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(20px);
             box-shadow: 
-                0 0 0 1px rgba(255,255,255,0.05),
-                0 25px 50px -12px rgba(0, 0, 0, 0.5),
-                0 0 100px rgba(139, 92, 246, 0.1);
+                0 0 0 1px rgba(249, 115, 22, 0.05),
+                0 25px 50px -12px rgba(249, 115, 22, 0.15);
         }
         
         @keyframes fadeInUp {
@@ -74,51 +72,76 @@
         }
         
         .login-header {
-            background: linear-gradient(180deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.05) 100%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 40px 32px 36px;
+            background: linear-gradient(180deg, rgba(251, 146, 60, 0.15) 0%, rgba(253, 186, 116, 0.08) 100%);
+            border-bottom: 1px solid rgba(249, 115, 22, 0.1);
+            padding: 20px 32px 36px;
             text-align: center;
             position: relative;
         }
+        
+        .home-link {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 8px;
+            color: #ea580c;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .home-link:hover {
+            background: rgba(249, 115, 22, 0.2);
+            color: #c2410c;
+        }
+        
+        .home-link i { font-size: 11px; }
         
         .login-header::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.3) 0%, transparent 60%);
+            background: radial-gradient(ellipse at 50% 0%, rgba(251, 146, 60, 0.25) 0%, transparent 60%);
             pointer-events: none;
         }
         
         .login-logo {
             width: 72px;
             height: 72px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(167, 139, 250, 0.2));
-            border: 1px solid rgba(139, 92, 246, 0.3);
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), rgba(251, 146, 60, 0.2));
+            border: 1px solid rgba(249, 115, 22, 0.3);
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
             font-size: 32px;
-            color: #a78bfa;
-            backdrop-filter: blur(10px);
+            color: #ea580c;
             animation: fadeInUp 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
             box-shadow: 
-                0 0 30px rgba(139, 92, 246, 0.3),
-                inset 0 0 20px rgba(139, 92, 246, 0.1);
+                0 0 30px rgba(249, 115, 22, 0.2),
+                inset 0 0 20px rgba(249, 115, 22, 0.1);
         }
         
         .login-header h1 {
             font-size: 24px;
             font-weight: 700;
             margin-bottom: 8px;
-            color: #ffffff;
+            color: #9a3412;
             animation: fadeInUp 0.6s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
             letter-spacing: -0.5px;
         }
         
         .login-header p {
-            color: #71717a;
+            color: #9a3412;
+            opacity: 0.7;
             font-size: 13px;
             font-weight: 500;
             animation: fadeInUp 0.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -146,13 +169,13 @@
         .alert-card.danger {
             background: rgba(239, 68, 68, 0.1);
             border-color: rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
+            color: #dc2626;
         }
         
         .alert-card.success {
             background: rgba(34, 197, 94, 0.1);
             border-color: rgba(34, 197, 94, 0.3);
-            color: #86efac;
+            color: #16a34a;
         }
         
         .alert-card i { font-size: 18px; }
@@ -166,33 +189,33 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            color: #71717a;
+            color: #9a3412;
             margin-bottom: 10px;
         }
         
-        .form-label i { color: #a78bfa; margin-right: 6px; }
+        .form-label i { color: #ea580c; margin-right: 6px; }
         
         .form-control {
             width: 100%;
             padding: 14px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(249, 115, 22, 0.2);
             border-radius: 10px;
             font-family: 'Segoe UI', sans-serif;
             font-size: 14px;
-            color: #fafafa;
-            background: rgba(255, 255, 255, 0.03);
+            color: #7c2d12;
+            background: #fffbf5;
             transition: all 0.3s ease;
             outline: none;
         }
         
-        .form-control::placeholder { color: #52525b; }
+        .form-control::placeholder { color: #c2410c; opacity: 0.5; }
         
         .form-control:focus {
-            border-color: rgba(139, 92, 246, 0.6);
-            background: rgba(139, 92, 246, 0.05);
+            border-color: rgba(249, 115, 22, 0.6);
+            background: #ffffff;
             box-shadow: 
-                0 0 0 3px rgba(139, 92, 246, 0.1),
-                0 0 20px rgba(139, 92, 246, 0.1);
+                0 0 0 3px rgba(249, 115, 22, 0.1),
+                0 0 20px rgba(249, 115, 22, 0.1);
         }
         
         /* Remember me checkbox */
@@ -209,31 +232,31 @@
             gap: 10px;
             cursor: pointer;
             font-size: 13px;
-            color: #71717a;
+            color: #9a3412;
         }
         
         .remember-me input[type="checkbox"] {
             width: 18px;
             height: 18px;
-            accent-color: #8b5cf6;
+            accent-color: #ea580c;
             cursor: pointer;
         }
         
         .forgot-link {
-            color: #a78bfa;
+            color: #ea580c;
             font-size: 13px;
             font-weight: 600;
             text-decoration: none;
             transition: color 0.2s;
         }
         
-        .forgot-link:hover { color: #c4b5fd; }
+        .forgot-link:hover { color: #c2410c; }
         
         /* Submit button */
         .btn-login {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #ea580c, #fb923c);
             color: white;
             border: none;
             border-radius: 10px;
@@ -263,8 +286,8 @@
         .btn-login:hover {
             transform: translateY(-2px);
             box-shadow: 
-                0 10px 30px -5px rgba(139, 92, 246, 0.5),
-                0 0 0 1px rgba(139, 92, 246, 0.5);
+                0 10px 30px -5px rgba(234, 88, 12, 0.4),
+                0 0 0 1px rgba(234, 88, 12, 0.5);
         }
         
         .btn-login:hover::before { opacity: 1; }
@@ -279,15 +302,15 @@
             gap: 6px;
             margin-top: 28px;
             padding-top: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            color: #71717a;
+            border-top: 1px solid rgba(249, 115, 22, 0.1);
+            color: #9a3412;
             font-size: 13px;
             font-weight: 500;
             text-decoration: none;
             transition: color 0.2s;
         }
         
-        .back-link:hover { color: #a78bfa; }
+        .back-link:hover { color: #ea580c; }
         .back-link i { font-size: 12px; }
         
         /* Floating particles */
@@ -295,7 +318,7 @@
             position: absolute;
             width: 4px;
             height: 4px;
-            background: rgba(139, 92, 246, 0.4);
+            background: rgba(249, 115, 22, 0.4);
             border-radius: 50%;
             animation: float 6s ease-in-out infinite;
             pointer-events: none;
@@ -305,10 +328,53 @@
             0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.4; }
             50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
         }
+        
+        /* Floating home button on left edge */
+        .floating-home-btn {
+            position: fixed;
+            top: 20px;
+            left: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 10px;
+            color: #ea580c;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.15);
+        }
+        
+        .floating-home-btn:hover {
+            background: #ea580c;
+            color: white;
+            left: 12px;
+            box-shadow: 0 6px 25px rgba(234, 88, 12, 0.3);
+        }
+        
+        .floating-home-btn i {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+        
+        .floating-home-btn:hover i {
+            transform: translateX(-3px);
+        }
+        
     </style>
 </head>
 <body>
-    <div class="login-card">
+    <a href="${pageContext.request.contextPath}/" class="floating-home-btn">
+        <i class="fas fa-arrow-left"></i>
+        <span>Quay lại trang chủ</span>
+    </a>
+    
+        <div class="login-card">
         <div class="login-header">
             <div class="login-logo">
                 <i class="fas fa-utensils"></i>
