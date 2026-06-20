@@ -47,8 +47,21 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         User currentUser = ServletUtils.currentUser(request);
 
-        if (currentUser != null && "Admin".equalsIgnoreCase(currentUser.getRoleName())) {
-            response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+        if (currentUser != null) {
+            String role = currentUser.getRoleName();
+            if ("Admin".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            } else if ("Manager".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/manager/dashboard");
+            } else if ("KitchenStaff".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/kitchen");
+            } else if ("Teacher".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/teacher/dashboard");
+            } else if ("Parent".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/parent/dashboard");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/");
+            }
             return;
         }
 
@@ -87,15 +100,21 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         User currentUser = ServletUtils.currentUser(request);
 
-        if (currentUser != null && "Admin".equalsIgnoreCase(currentUser.getRoleName())) {
-            response.sendRedirect(request.getContextPath() + "/admin/dashboard");
-            return;
-        }
-
         if (currentUser != null) {
-            request.setAttribute("message", "Bạn đang đăng nhập với role " + currentUser.getRoleName()
-                    + ". Module role này sẽ do thành viên khác triển khai.");
-            request.getRequestDispatcher("/jsp/auth/role-waiting.jsp").forward(request, response);
+            String role = currentUser.getRoleName();
+            if ("Admin".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            } else if ("Manager".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/manager/dashboard");
+            } else if ("KitchenStaff".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/kitchen");
+            } else if ("Teacher".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/teacher/dashboard");
+            } else if ("Parent".equalsIgnoreCase(role)) {
+                response.sendRedirect(request.getContextPath() + "/parent/dashboard");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/");
+            }
             return;
         }
 
@@ -118,12 +137,42 @@ public class AuthServlet extends HttpServlet {
             }
 
             User user = authenticated.get();
+            
+            // DEBUG
+            System.out.println("=== LOGIN DEBUG ===");
+            System.out.println("Username: " + user.getUsername());
+            System.out.println("RoleID: " + user.getRoleId());
+            System.out.println("RoleName: '" + user.getRoleName() + "'");
+            
             request.getSession(true).setAttribute("authUser", user);
             systemLogDAO.create(user.getUserId(), "LOGIN", "Users", user.getUserId(),
                     "Người dùng " + user.getUsername() + " đăng nhập hệ thống");
 
             if ("Admin".equalsIgnoreCase(user.getRoleName())) {
-                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+                String redirectUrl = request.getContextPath() + "/admin";
+                System.out.println("=== LOGIN REDIRECT ===");
+                System.out.println("Redirecting Admin to: " + redirectUrl);
+                response.sendRedirect(redirectUrl);
+            } else if ("Manager".equalsIgnoreCase(user.getRoleName())) {
+                String redirectUrl = request.getContextPath() + "/manager";
+                System.out.println("=== LOGIN REDIRECT ===");
+                System.out.println("Redirecting Manager to: " + redirectUrl);
+                response.sendRedirect(redirectUrl);
+            } else if ("KitchenStaff".equalsIgnoreCase(user.getRoleName())) {
+                String redirectUrl = request.getContextPath() + "/kitchen";
+                System.out.println("=== LOGIN REDIRECT ===");
+                System.out.println("Redirecting Kitchen to: " + redirectUrl);
+                response.sendRedirect(redirectUrl);
+            } else if ("Teacher".equalsIgnoreCase(user.getRoleName())) {
+                String redirectUrl = request.getContextPath() + "/teacher";
+                System.out.println("=== LOGIN REDIRECT ===");
+                System.out.println("Redirecting Teacher to: " + redirectUrl);
+                response.sendRedirect(redirectUrl);
+            } else if ("Parent".equalsIgnoreCase(user.getRoleName())) {
+                String redirectUrl = request.getContextPath() + "/parent";
+                System.out.println("=== LOGIN REDIRECT ===");
+                System.out.println("Redirecting Parent to: " + redirectUrl);
+                response.sendRedirect(redirectUrl);
             } else {
                 request.setAttribute("message", "Đăng nhập thành công. Module của role " + user.getRoleName()
                         + " sẽ do thành viên khác triển khai.");
