@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.LocalDate;
 
 /**
  *
@@ -38,7 +39,24 @@ public class MealHistoryServlet extends HttpServlet {
 
         int parentID = (int) session.getAttribute("userId");
 
-        request.setAttribute("mealHistoryList", attendanceDAO.getMealHistoryByParent(parentID));
+        LocalDate today = LocalDate.now();
+        int year = today.getYear();
+        int month = today.getMonthValue();
+
+        String yearRaw = request.getParameter("year");
+        String monthRaw = request.getParameter("month");
+
+        if (yearRaw != null && !yearRaw.trim().isEmpty()) {
+            year = Integer.parseInt(yearRaw);
+        }
+
+        if (monthRaw != null && !monthRaw.trim().isEmpty()) {
+            month = Integer.parseInt(monthRaw);
+        }
+
+        request.setAttribute("selectedYear", year);
+        request.setAttribute("selectedMonth", month);
+        request.setAttribute("mealHistoryList", attendanceDAO.getMealHistoryByParent(parentID, year, month));
 
         request.getRequestDispatcher("/views/meal-history.jsp").forward(request, response);
     }

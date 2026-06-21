@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.mycompany.kindergartenkitchen.model.MealHistory;
 import com.mycompany.kindergartenkitchen.model.MealCount;
+import com.mycompany.kindergartenkitchen.model.LevelMealCount;
 
 public class AttendanceDAO extends DBContext {
 
@@ -124,6 +125,7 @@ public class AttendanceDAO extends DBContext {
                 + "LEFT JOIN Users reporter ON a.ReportedBy = reporter.UserID "
                 + "LEFT JOIN Users confirmer ON a.ConfirmedBy = confirmer.UserID "
                 + "WHERE s.ParentID = ? "
+                + "AND a.Status = 'Absent' "
                 + "ORDER BY a.AttendanceDate DESC, a.AttendanceID DESC";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -296,7 +298,7 @@ public class AttendanceDAO extends DBContext {
         return false;
     }
 
-    public List<MealHistory> getMealHistoryByParent(int parentID) {
+    public List<MealHistory> getMealHistoryByParent(int parentID, int year, int month) {
         List<MealHistory> list = new ArrayList<>();
 
         String sql = "SELECT "
@@ -322,11 +324,15 @@ public class AttendanceDAO extends DBContext {
                 + "WHERE s.ParentID = ? "
                 + "AND s.Status = 1 "
                 + "AND m.Status = 1 "
+                + "AND YEAR(md.MenuDate) = ? "
+                + "AND MONTH(md.MenuDate) = ? "
                 + "ORDER BY md.MenuDate DESC, s.StudentName, mt.MealTypeID";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, parentID);
+            ps.setInt(2, year);
+            ps.setInt(3, month);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -362,14 +368,17 @@ public class AttendanceDAO extends DBContext {
                 + "c.ClassID, "
                 + "c.ClassName, "
                 + "l.LevelName, "
-                + "COUNT(s.StudentID) AS PresentCount "
-                + "FROM Attendance a "
-                + "JOIN Students s ON a.StudentID = s.StudentID "
+                + "SUM(CASE WHEN a.Status = 'Present' THEN 1 ELSE 0 END) AS PresentCount, "
+                + "SUM(CASE "
+                + "WHEN a.AttendanceID IS NULL "
+                + "OR a.Status = 'Present' "
+                + "OR (a.Status = 'Absent' AND a.IsCharged = 1) "
+                + "THEN 1 ELSE 0 END) AS MealCount "
+                + "FROM Students s "
                 + "JOIN Classes c ON s.ClassID = c.ClassID "
                 + "JOIN Levels l ON c.LevelID = l.LevelID "
-                + "WHERE a.AttendanceDate = ? "
-                + "AND a.Status = 'Present' "
-                + "AND s.Status = 1 "
+                + "LEFT JOIN Attendance a ON s.StudentID = a.StudentID AND a.AttendanceDate = ? "
+                + "WHERE s.Status = 1 "
                 + "AND c.Status = 1 "
                 + "GROUP BY c.ClassID, c.ClassName, l.LevelName "
                 + "ORDER BY c.ClassName";
@@ -386,10 +395,53 @@ public class AttendanceDAO extends DBContext {
                             rs.getInt("ClassID"),
                             rs.getString("ClassName"),
                             rs.getString("LevelName"),
-                            rs.getInt("PresentCount")
+                            rs.getInt("PresentCount"),
+                            rs.getInt("MealCount")
                     );
 
                     list.add(mealCount);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public List<LevelMealCount> getMealCountByLevel(Date attendanceDate) {
+        List<LevelMealCount> list = new ArrayList<>();
+
+        String sql = "SELECT "
+                + "? AS AttendanceDate, "
+                + "l.LevelName, "
+                + "SUM(CASE "
+                + "WHEN a.AttendanceID IS NULL "
+                + "OR a.Status = 'Present' "
+                + "OR (a.Status = 'Absent' AND a.IsCharged = 1) "
+                + "THEN 1 ELSE 0 END) AS MealCount "
+                + "FROM Students s "
+                + "JOIN Classes c ON s.ClassID = c.ClassID "
+                + "JOIN Levels l ON c.LevelID = l.LevelID "
+                + "LEFT JOIN Attendance a ON s.StudentID = a.StudentID AND a.AttendanceDate = ? "
+                + "WHERE s.Status = 1 "
+                + "AND c.Status = 1 "
+                + "GROUP BY l.LevelName "
+                + "ORDER BY l.LevelName";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDate(1, attendanceDate);
+            ps.setDate(2, attendanceDate);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new LevelMealCount(
+                            rs.getDate("AttendanceDate"),
+                            rs.getString("LevelName"),
+                            rs.getInt("MealCount")
+                    ));
                 }
             }
 

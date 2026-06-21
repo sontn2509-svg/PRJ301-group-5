@@ -4,130 +4,186 @@
     Author     : Vuong Nguyen
 --%>
 
+<%-- kitchen-meal-count.jsp – Bếp xem số suất ăn (Member 3) --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="java.util.List"%>
 <%@page import="java.sql.Date"%>
 <%@page import="com.mycompany.kindergartenkitchen.model.MealCount"%>
+<%@page import="com.mycompany.kindergartenkitchen.model.LevelMealCount"%>
 <%@page import="com.mycompany.kindergartenkitchen.model.Attendance"%>
-
 <!DOCTYPE html>
-<html>
+<html lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title>Bếp xem số suất ăn</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Số suất ăn – KindergartenKitchen</title>
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     </head>
-    <body>
-        <h2>Bếp xem danh sách học sinh có mặt / số suất ăn</h2>
+    <body class="bg-light">
+        <div class="container py-4">
 
-        <%
-            Date mealDate = (Date) request.getAttribute("mealDate");
-            Integer totalMealCountObj = (Integer) request.getAttribute("totalMealCount");
-            int totalMealCount = totalMealCountObj != null ? totalMealCountObj : 0;
-
-            List<MealCount> mealCountList = (List<MealCount>) request.getAttribute("mealCountList");
-            List<Attendance> presentStudents = (List<Attendance>) request.getAttribute("presentStudents");
-        %>
-
-        <h3>Chọn ngày</h3>
-
-        <form action="<%= request.getContextPath() %>/kitchen/meal-count" method="get">
-            <table>
-                <tr>
-                    <td>Ngày:</td>
-                    <td>
-                        <input type="date" name="mealDate" required
-                               value="<%= mealDate != null ? mealDate : "" %>">
-                    </td>
-                    <td>
-                        <button type="submit">Xem</button>
-                    </td>
-                </tr>
-            </table>
-        </form>
-
-        <hr>
-
-        <h3>Tổng số suất ăn cần chuẩn bị</h3>
-
-        <p>
-            Ngày: <strong><%= mealDate != null ? mealDate : "" %></strong>
-        </p>
-
-        <p>
-            Tổng số suất ăn: <strong><%= totalMealCount %></strong>
-        </p>
-
-        <h3>Số suất ăn theo lớp</h3>
-
-        <table border="1" cellpadding="8" cellspacing="0">
-            <tr>
-                <th>Lớp</th>
-                <th>Cấp học</th>
-                <th>Số học sinh có mặt</th>
-                <th>Số suất ăn</th>
-            </tr>
+            <h3 class="mb-4">🍽️ Bếp – Số suất ăn cần chuẩn bị</h3>
 
             <%
-                if (mealCountList != null && !mealCountList.isEmpty()) {
-                    for (MealCount m : mealCountList) {
+                Date      mealDate          = (Date)      request.getAttribute("mealDate");
+                Integer   totalMealCountObj = (Integer)   request.getAttribute("totalMealCount");
+                int       totalMealCount    = totalMealCountObj != null ? totalMealCountObj : 0;
+                List<MealCount>  mealCountList   = (List<MealCount>)  request.getAttribute("mealCountList");
+                List<LevelMealCount> levelMealCountList = (List<LevelMealCount>) request.getAttribute("levelMealCountList");
+                List<Attendance> presentStudents = (List<Attendance>) request.getAttribute("presentStudents");
             %>
-            <tr>
-                <td><%= m.getClassName() %></td>
-                <td><%= m.getLevelName() %></td>
-                <td><%= m.getPresentCount() %></td>
-                <td><%= m.getPresentCount() %></td>
-            </tr>
-            <%
-                    }
-                } else {
-            %>
-            <tr>
-                <td colspan="4">Chưa có dữ liệu suất ăn cho ngày này.</td>
-            </tr>
-            <%
-                }
-            %>
-        </table>
 
-        <hr>
+            <%-- Bộ chọn ngày --%>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form action="<%= request.getContextPath() %>/kitchen/meal-count" method="get"
+                          class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Chọn ngày</label>
+                            <input type="date" name="mealDate" class="form-control" required
+                                   value="<%= mealDate != null ? mealDate : "" %>">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Xem</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-        <h3>Danh sách học sinh có mặt</h3>
+            <%-- Tổng suất ăn --%>
+            <div class="alert alert-primary fs-5">
+                📅 Ngày: <strong><%= mealDate != null ? mealDate : "—" %></strong>
+                &nbsp;|&nbsp;
+                🍴 Tổng số suất ăn cần chuẩn bị:
+                <strong class="text-primary fs-4"><%= totalMealCount %></strong>
+            </div>
 
-        <table border="1" cellpadding="8" cellspacing="0">
-            <tr>
-                <th>ID</th>
-                <th>Mã học sinh</th>
-                <th>Tên học sinh</th>
-                <th>Lớp</th>
-                <th>Ngày</th>
-                <th>Trạng thái</th>
-            </tr>
+            <%-- Tổng suất ăn theo cấp học --%>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header fw-semibold">Số suất ăn theo cấp học</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Cấp học</th>
+                                <th class="text-center">Số suất ăn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                if (levelMealCountList != null && !levelMealCountList.isEmpty()) {
+                                    int idx = 1;
+                                    for (LevelMealCount l : levelMealCountList) {
+                            %>
+                            <tr>
+                                <td><%= idx++ %></td>
+                                <td><strong><%= l.getLevelName() %></strong></td>
+                                <td class="text-center"><span class="badge bg-primary fs-6"><%= l.getMealCount() %></span></td>
+                            </tr>
+                            <%
+                                    }
+                                } else {
+                            %>
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">
+                                    Chưa có dữ liệu suất ăn theo cấp học.
+                                </td>
+                            </tr>
+                            <%  } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-            <%
-                if (presentStudents != null && !presentStudents.isEmpty()) {
-                    for (Attendance a : presentStudents) {
-            %>
-            <tr>
-                <td><%= a.getStudentID() %></td>
-                <td><%= a.getStudentCode() %></td>
-                <td><%= a.getStudentName() %></td>
-                <td><%= a.getClassName() %></td>
-                <td><%= a.getAttendanceDate() %></td>
-                <td><%= a.getStatusText() %></td>
-            </tr>
-            <%
-                    }
-                } else {
-            %>
-            <tr>
-                <td colspan="6">Chưa có học sinh có mặt trong ngày này.</td>
-            </tr>
-            <%
-                }
-            %>
-        </table>
+            <%-- Bảng theo lớp --%>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header fw-semibold">Số suất ăn theo lớp</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Lớp</th>
+                                <th>Cấp học</th>
+                                <th class="text-center">Số học sinh có mặt</th>
+                                <th class="text-center">Số suất ăn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                if (mealCountList != null && !mealCountList.isEmpty()) {
+                                    int idx = 1;
+                                    for (MealCount m : mealCountList) {
+                            %>
+                            <tr>
+                                <td><%= idx++ %></td>
+                                <td><strong><%= m.getClassName() %></strong></td>
+                                <td><%= m.getLevelName() %></td>
+                                <td class="text-center"><span class="badge bg-success fs-6"><%= m.getPresentCount() %></span></td>
+                                <td class="text-center"><span class="badge bg-primary fs-6"><%= m.getMealCount() %></span></td>
+                            </tr>
+                            <%
+                                    }
+                                } else {
+                            %>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    Chưa có dữ liệu suất ăn cho ngày này.
+                                </td>
+                            </tr>
+                            <%  } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-        <br>
-        <a href="<%= request.getContextPath() %>/index.jsp">Về trang chủ</a>
+            <%-- Bảng danh sách học sinh có mặt --%>
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">Danh sách học sinh có mặt hôm nay</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Mã HS</th>
+                                <th>Tên học sinh</th>
+                                <th>Lớp</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%
+                                if (presentStudents != null && !presentStudents.isEmpty()) {
+                                    int idx = 1;
+                                    for (Attendance a : presentStudents) {
+                            %>
+                            <tr>
+                                <td><%= idx++ %></td>
+                                <td><code><%= a.getStudentCode() %></code></td>
+                                <td><strong><%= a.getStudentName() %></strong></td>
+                                <td><%= a.getClassName() %></td>
+                                <td><span class="badge bg-success">Có mặt</span></td>
+                            </tr>
+                            <%
+                                    }
+                                } else {
+                            %>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    Chưa có học sinh nào có mặt trong ngày này.
+                                </td>
+                            </tr>
+                            <%  } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a href="<%= request.getContextPath() %>/index.jsp" class="text-secondary">← Về trang chủ</a>
+            </div>
+        </div>
     </body>
 </html>

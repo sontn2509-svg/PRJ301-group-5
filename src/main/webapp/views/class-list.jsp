@@ -4,162 +4,95 @@
     Author     : Vuong Nguyen
 --%>
 
+<%-- class-list.jsp – Danh sách lớp học (Member 3) --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="java.util.List"%>
 <%@page import="com.mycompany.kindergartenkitchen.model.ClassInfo"%>
-<%@page import="com.mycompany.kindergartenkitchen.model.LevelInfo"%>
-<%@page import="com.mycompany.kindergartenkitchen.model.UserInfo"%>
-
 <!DOCTYPE html>
-<html>
+<html lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title>Quản lý lớp học</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Quản lý lớp học – KindergartenKitchen</title>
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     </head>
-    <body>
-        <h2>Quản lý lớp học</h2>
+    <body class="bg-light">
+        <div class="container py-4">
 
-        <%
-            String message = (String) request.getAttribute("message");
-            String error = (String) request.getAttribute("error");
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0">📚 Quản lý lớp học</h3>
+                <a href="<%= request.getContextPath() %>/classes?action=add"
+                   class="btn btn-success">+ Thêm lớp mới</a>
+            </div>
 
-            ClassInfo editClass = (ClassInfo) request.getAttribute("editClass");
+            <%
+                String message = (String) request.getAttribute("message");
+                String error   = (String) request.getAttribute("error");
+                List<ClassInfo> classList = (List<ClassInfo>) request.getAttribute("classList");
+            %>
 
-            List<ClassInfo> classes = (List<ClassInfo>) request.getAttribute("classes");
-            List<LevelInfo> levels = (List<LevelInfo>) request.getAttribute("levels");
-            List<UserInfo> teachers = (List<UserInfo>) request.getAttribute("teachers");
-        %>
-
-        <% if (message != null) { %>
-        <p style="color: green;"><%= message %></p>
-        <% } %>
-
-        <% if (error != null) { %>
-        <p style="color: red;"><%= error %></p>
-        <% } %>
-
-        <h3><%= editClass == null ? "Thêm lớp học" : "Cập nhật lớp học" %></h3>
-
-        <form action="<%= request.getContextPath() %>/classes" method="post">
-            <% if (editClass != null) { %>
-            <input type="hidden" name="action" value="update">
-            <input type="hidden" name="classID" value="<%= editClass.getClassID() %>">
-            <% } else { %>
-            <input type="hidden" name="action" value="insert">
+            <% if (message != null) { %>
+            <div class="alert alert-success"><%= message %></div>
+            <% } %>
+            <% if (error != null) { %>
+            <div class="alert alert-danger"><%= error %></div>
             <% } %>
 
-            <table>
-                <tr>
-                    <td>Tên lớp:</td>
-                    <td>
-                        <input type="text" name="className" required
-                               value="<%= editClass != null ? editClass.getClassName() : "" %>">
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>Cấp học:</td>
-                    <td>
-                        <select name="levelID" required>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>#</th>
+                                <th>Tên lớp</th>
+                                <th>Cấp học</th>
+                                <th>Giáo viên phụ trách</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             <%
-                                if (levels != null) {
-                                    for (LevelInfo level : levels) {
+                                if (classList != null && !classList.isEmpty()) {
+                                    int idx = 1;
+                                    for (ClassInfo c : classList) {
                             %>
-                            <option value="<%= level.getLevelID() %>"
-                                    <%= editClass != null && editClass.getLevelID() == level.getLevelID() ? "selected" : "" %>>
-                                <%= level.getLevelName() %>
-                            </option>
-                            <%
-                                    }
-                                }
-                            %>
-                        </select>
-                    </td>
-                </tr>
+                            <tr>
+                                <td><%= idx++ %></td>
+                                <td><strong><%= c.getClassName() %></strong></td>
+                                <td><%= c.getLevelName() %></td>
+                                <td><%= c.getTeacherName() %></td>
+                                <td class="text-center">
+                                    <a href="<%= request.getContextPath() %>/classes?action=edit&classID=<%= c.getClassID() %>"
+                                       class="btn btn-sm btn-outline-primary me-1">Sửa</a>
 
-                <tr>
-                    <td>Giáo viên:</td>
-                    <td>
-                        <select name="teacherID">
-                            <option value="">-- Chưa gán giáo viên --</option>
-
-                            <%
-                                if (teachers != null) {
-                                    for (UserInfo teacher : teachers) {
-                            %>
-                            <option value="<%= teacher.getUserID() %>"
-                                    <%= editClass != null && editClass.getTeacherID() == teacher.getUserID() ? "selected" : "" %>>
-                                <%= teacher.getFullName() %>
-                            </option>
+                                    <form action="<%= request.getContextPath() %>/classes"
+                                          method="post" class="d-inline"
+                                          onsubmit="return confirm('Xác nhận xóa lớp này?');">
+                                        <input type="hidden" name="action"  value="delete">
+                                        <input type="hidden" name="classID" value="<%= c.getClassID() %>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                    </form>
+                                </td>
+                            </tr>
                             <%
                                     }
-                                }
+                                } else {
                             %>
-                        </select>
-                    </td>
-                </tr>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    Chưa có lớp học nào.
+                                </td>
+                            </tr>
+                            <%  } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                <tr>
-                    <td></td>
-                    <td>
-                        <button type="submit">
-                            <%= editClass == null ? "Thêm lớp" : "Cập nhật" %>
-                        </button>
-
-                        <% if (editClass != null) { %>
-                        <a href="<%= request.getContextPath() %>/classes">Hủy sửa</a>
-                        <% } %>
-                    </td>
-                </tr>
-            </table>
-        </form>
-
-        <hr>
-
-        <h3>Danh sách lớp học</h3>
-
-        <table border="1" cellpadding="8" cellspacing="0">
-            <tr>
-                <th>ID</th>
-                <th>Tên lớp</th>
-                <th>Cấp học</th>
-                <th>Giáo viên</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
-            </tr>
-
-            <%
-                if (classes != null && !classes.isEmpty()) {
-                    for (ClassInfo c : classes) {
-            %>
-            <tr>
-                <td><%= c.getClassID() %></td>
-                <td><%= c.getClassName() %></td>
-                <td><%= c.getLevelName() %></td>
-                <td><%= c.getTeacherName() %></td>
-                <td><%= c.isStatus() ? "Đang hoạt động" : "Đã khóa" %></td>
-                <td>
-                    <a href="<%= request.getContextPath() %>/classes?action=edit&id=<%= c.getClassID() %>">Sửa</a>
-                    |
-                    <a href="<%= request.getContextPath() %>/classes?action=delete&id=<%= c.getClassID() %>"
-                       onclick="return confirm('Bạn có chắc muốn xóa lớp này không?');">
-                        Xóa
-                    </a>
-                </td>
-            </tr>
-            <%
-                    }
-                } else {
-            %>
-            <tr>
-                <td colspan="6">Chưa có lớp học nào.</td>
-            </tr>
-            <%
-                }
-            %>
-        </table>
-
-        <br>
-        <a href="<%= request.getContextPath() %>/index.jsp">Về trang chủ</a>
+            <div class="mt-3">
+                <a href="<%= request.getContextPath() %>/index.jsp" class="text-secondary">← Về trang chủ</a>
+            </div>
+        </div>
     </body>
 </html>

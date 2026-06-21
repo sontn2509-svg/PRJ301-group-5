@@ -290,4 +290,26 @@ public class StudentDAO extends DBContext {
 
         return list;
     }
+
+    public boolean isStudentOfParent(int studentID, int parentID) {
+        String sql = "SELECT COUNT(*) AS Total FROM Students "
+                + "WHERE StudentID = ? AND ParentID = ? AND Status = 1";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, studentID);
+            ps.setInt(2, parentID);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("Total") > 0;
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 }

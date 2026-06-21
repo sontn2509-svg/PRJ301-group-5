@@ -2,6 +2,7 @@ package com.mycompany.kindergartenkitchen.service;
 
 import com.mycompany.kindergartenkitchen.dao.AttendanceDAO;
 import com.mycompany.kindergartenkitchen.model.Attendance;
+import com.mycompany.kindergartenkitchen.model.LevelMealCount;
 import com.mycompany.kindergartenkitchen.model.MealCount;
 import java.sql.Date;
 import java.util.List;
@@ -18,6 +19,10 @@ public class MealCountService {
         return attendanceDAO.getPresentStudentsByDate(attendanceDate);
     }
 
+    public List<LevelMealCount> getMealCountByLevel(Date attendanceDate) {
+        return attendanceDAO.getMealCountByLevel(attendanceDate);
+    }
+
     public int getTotalMealCount(Date attendanceDate) {
         List<MealCount> mealCounts = attendanceDAO.getMealCountByDate(attendanceDate);
 
@@ -25,7 +30,7 @@ public class MealCountService {
 
         if (mealCounts != null) {
             for (MealCount mealCount : mealCounts) {
-                total += mealCount.getPresentCount();
+                total += mealCount.getMealCount();
             }
         }
 

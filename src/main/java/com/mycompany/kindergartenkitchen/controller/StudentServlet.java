@@ -8,78 +8,97 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Date;
+import java.util.List;
 
+/**
+ * StudentServlet – Quản lý học sinh (dành cho Admin/Manager) URL: /students
+ *
+ * action (GET): (none/list) – danh sách, có thể lọc theo ?classID= add – form
+ * thêm mới edit – form sửa (cần ?studentID=)
+ *
+ * action (POST): add – lưu mới edit – cập nhật delete – xóa mềm
+ */
 @WebServlet(name = "StudentServlet", urlPatterns = {"/students"})
 public class StudentServlet extends HttpServlet {
 
     private final StudentDAO studentDAO = new StudentDAO();
     private final ClassDAO classDAO = new ClassDAO();
 
+    // ─── GET ─────────────────────────────────────────────────────────────────
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        String action = request.getParameter("action");
-
-        if (action == null) {
-            action = "list";
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
-
-        switch (action) {
-            case "edit":
-                showEditForm(request, response);
-                break;
-            case "delete":
-                deleteStudent(request, response);
-                break;
-            default:
-                showStudentPage(request, response, null);
-                break;
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
 
-        if ("update".equals(action)) {
-            updateStudent(request, response);
+        if ("add".equals(action)) {
+            request.setAttribute("classList", classDAO.getAllClasses());
+            request.setAttribute("parents", studentDAO.getActiveParents());
+            request.getRequestDispatcher("/views/student-form.jsp").forward(request, response);
+            return;
+        }
+
+        if ("edit".equals(action)) {
+            String studentIDRaw = request.getParameter("studentID");
+            if (studentIDRaw == null || studentIDRaw.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/students");
+                return;
+            }
+            int studentID = Integer.parseInt(studentIDRaw);
+            Student student = studentDAO.getStudentById(studentID);
+            if (student == null) {
+                response.sendRedirect(request.getContextPath() + "/students?message=notFound");
+                return;
+            }
+            request.setAttribute("student", student);
+            request.setAttribute("classList", classDAO.getAllClasses());
+            request.setAttribute("parents", studentDAO.getActiveParents());
+            request.getRequestDispatcher("/views/student-form.jsp").forward(request, response);
+            return;
+        }
+
+        // Danh sách, hỗ trợ lọc theo lớp
+        String classIDRaw = request.getParameter("classID");
+        List<Student> students;
+
+        if (classIDRaw != null && !classIDRaw.trim().isEmpty()) {
+            students = studentDAO.getStudentsByClass(Integer.parseInt(classIDRaw));
         } else {
-            insertStudent(request, response);
+            students = studentDAO.getAllStudents();
         }
-    }
 
-    private void showStudentPage(HttpServletRequest request, HttpServletResponse response, Student editStudent)
-            throws ServletException, IOException {
+        request.setAttribute("studentList", students);
+        request.setAttribute("classList", classDAO.getAllClasses());
 
-        request.setAttribute("students", studentDAO.getAllStudents());
-        request.setAttribute("classes", classDAO.getAllClasses());
-        request.setAttribute("parents", studentDAO.getActiveParents());
-        request.setAttribute("editStudent", editStudent);
-
-        String message = request.getParameter("message");
-
-        if (message != null) {
-            switch (message) {
+        String msg = request.getParameter("message");
+        if (msg != null) {
+            switch (msg) {
                 case "addSuccess":
                     request.setAttribute("message", "Thêm học sinh thành công.");
                     break;
-                case "updateSuccess":
+                case "editSuccess":
                     request.setAttribute("message", "Cập nhật học sinh thành công.");
                     break;
                 case "deleteSuccess":
                     request.setAttribute("message", "Xóa học sinh thành công.");
                     break;
+                case "notFound":
+                    request.setAttribute("error", "Không tìm thấy học sinh.");
+                    break;
                 case "error":
-                    request.setAttribute("error", "Có lỗi xảy ra. Vui lòng kiểm tra lại dữ liệu.");
+                    request.setAttribute("error", "Có lỗi xảy ra. Vui lòng thử lại.");
                     break;
                 default:
                     break;
@@ -89,111 +108,109 @@ public class StudentServlet extends HttpServlet {
         request.getRequestDispatcher("/views/student-list.jsp").forward(request, response);
     }
 
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+    // ─── POST ────────────────────────────────────────────────────────────────
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        try {
-            int studentID = Integer.parseInt(request.getParameter("id"));
-            Student editStudent = studentDAO.getStudentById(studentID);
-            showStudentPage(request, response, editStudent);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/students?message=error");
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
+
+        String action = request.getParameter("action");
+
+        if ("delete".equals(action)) {
+            try {
+                int studentID = Integer.parseInt(request.getParameter("studentID"));
+                boolean ok = studentDAO.deleteStudent(studentID);
+                response.sendRedirect(request.getContextPath()
+                        + "/students?message=" + (ok ? "deleteSuccess" : "error"));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.sendRedirect(request.getContextPath() + "/students?message=error");
+            }
+            return;
+        }
+
+        if ("add".equals(action)) {
+            try {
+                Student s = buildStudentFromRequest(request, 0);
+                if (s == null) {
+                    response.sendRedirect(request.getContextPath() + "/students?action=add&message=error");
+                    return;
+                }
+                boolean ok = studentDAO.insertStudent(s);
+                response.sendRedirect(request.getContextPath()
+                        + "/students?message=" + (ok ? "addSuccess" : "error"));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.sendRedirect(request.getContextPath() + "/students?message=error");
+            }
+            return;
+        }
+
+        if ("edit".equals(action)) {
+            try {
+                int studentID = Integer.parseInt(request.getParameter("studentID"));
+                Student s = buildStudentFromRequest(request, studentID);
+                if (s == null) {
+                    response.sendRedirect(request.getContextPath()
+                            + "/students?action=edit&studentID=" + studentID + "&message=error");
+                    return;
+                }
+                boolean ok = studentDAO.updateStudent(s);
+                response.sendRedirect(request.getContextPath()
+                        + "/students?message=" + (ok ? "editSuccess" : "error"));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.sendRedirect(request.getContextPath() + "/students?message=error");
+            }
+            return;
+        }
+
+        response.sendRedirect(request.getContextPath() + "/students");
     }
 
-    private void insertStudent(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-
+    // ─── Helper ──────────────────────────────────────────────────────────────
+    private Student buildStudentFromRequest(HttpServletRequest request, int studentID) {
         try {
             String studentCode = request.getParameter("studentCode");
             String studentName = request.getParameter("studentName");
-            Date dateOfBirth = Date.valueOf(request.getParameter("dateOfBirth"));
-            boolean gender = "1".equals(request.getParameter("gender"));
-            int classID = Integer.parseInt(request.getParameter("classID"));
-            int parentID = parseParentID(request.getParameter("parentID"));
+            String dobRaw = request.getParameter("dateOfBirth");
+            String genderRaw = request.getParameter("gender");
+            String classIDRaw = request.getParameter("classID");
+            String parentIDRaw = request.getParameter("parentID");
 
-            Student student = new Student();
-            student.setStudentCode(studentCode);
-            student.setStudentName(studentName);
-            student.setDateOfBirth(dateOfBirth);
-            student.setGender(gender);
-            student.setClassID(classID);
-            student.setParentID(parentID);
-
-            boolean success = studentDAO.insertStudent(student);
-
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/students?message=addSuccess");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/students?message=error");
+            if (studentCode == null || studentCode.trim().isEmpty()
+                    || studentName == null || studentName.trim().isEmpty()
+                    || classIDRaw == null || classIDRaw.trim().isEmpty()) {
+                return null;
             }
 
+            int classID = Integer.parseInt(classIDRaw);
+            int parentID = (parentIDRaw == null || parentIDRaw.trim().isEmpty())
+                    ? 0 : Integer.parseInt(parentIDRaw);
+            boolean gender = "1".equals(genderRaw) || "true".equalsIgnoreCase(genderRaw);
+            Date dob = (dobRaw != null && !dobRaw.trim().isEmpty())
+                    ? Date.valueOf(dobRaw) : null;
+
+            Student s = new Student();
+            s.setStudentID(studentID);
+            s.setStudentCode(studentCode.trim());
+            s.setStudentName(studentName.trim());
+            s.setDateOfBirth(dob);
+            s.setGender(gender);
+            s.setClassID(classID);
+            s.setParentID(parentID);
+            return s;
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/students?message=error");
+            return null;
         }
-    }
-
-    private void updateStudent(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-
-        try {
-            int studentID = Integer.parseInt(request.getParameter("studentID"));
-            String studentCode = request.getParameter("studentCode");
-            String studentName = request.getParameter("studentName");
-            Date dateOfBirth = Date.valueOf(request.getParameter("dateOfBirth"));
-            boolean gender = "1".equals(request.getParameter("gender"));
-            int classID = Integer.parseInt(request.getParameter("classID"));
-            int parentID = parseParentID(request.getParameter("parentID"));
-
-            Student student = new Student();
-            student.setStudentID(studentID);
-            student.setStudentCode(studentCode);
-            student.setStudentName(studentName);
-            student.setDateOfBirth(dateOfBirth);
-            student.setGender(gender);
-            student.setClassID(classID);
-            student.setParentID(parentID);
-
-            boolean success = studentDAO.updateStudent(student);
-
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/students?message=updateSuccess");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/students?message=error");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/students?message=error");
-        }
-    }
-
-    private void deleteStudent(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-
-        try {
-            int studentID = Integer.parseInt(request.getParameter("id"));
-            boolean success = studentDAO.deleteStudent(studentID);
-
-            if (success) {
-                response.sendRedirect(request.getContextPath() + "/students?message=deleteSuccess");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/students?message=error");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/students?message=error");
-        }
-    }
-
-    private int parseParentID(String parentIDRaw) {
-        if (parentIDRaw == null || parentIDRaw.trim().isEmpty()) {
-            return 0;
-        }
-
-        return Integer.parseInt(parentIDRaw);
     }
 }

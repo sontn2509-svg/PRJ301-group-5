@@ -2,12 +2,18 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-
 package com.mycompany.kindergartenkitchen.model;
 
 /**
  *
  * @author VuongNguyen
+ */
+/**
+ * UserInfo – thông tin tóm tắt người dùng (dùng trong dropdown giáo viên, phụ
+ * huynh…)
+ *
+ * Lưu ý: thêm getUserID() và getUsername() để các JSP có thể gọi đúng tên
+ * method.
  */
 public class UserInfo {
 
@@ -20,7 +26,8 @@ public class UserInfo {
     public UserInfo() {
     }
 
-    public UserInfo(int userID, String username, String fullName, String roleName, boolean status) {
+    public UserInfo(int userID, String username, String fullName,
+            String roleName, boolean status) {
         this.userID = userID;
         this.username = username;
         this.fullName = fullName;
@@ -28,6 +35,7 @@ public class UserInfo {
         this.status = status;
     }
 
+    // ─── Getters / Setters ────────────────────────────────────────────────
     public int getUserID() {
         return userID;
     }
@@ -67,5 +75,4 @@ public class UserInfo {
     public void setStatus(boolean status) {
         this.status = status;
     }
-    
 }

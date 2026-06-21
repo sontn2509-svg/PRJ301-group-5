@@ -42,6 +42,7 @@ public class KitchenMealServlet extends HttpServlet {
 
             request.setAttribute("mealDate", mealDate);
             request.setAttribute("mealCountList", mealCountService.getMealCountByDate(mealDate));
+            request.setAttribute("levelMealCountList", mealCountService.getMealCountByLevel(mealDate));
             request.setAttribute("presentStudents", mealCountService.getPresentStudentsByDate(mealDate));
             request.setAttribute("totalMealCount", mealCountService.getTotalMealCount(mealDate));
 

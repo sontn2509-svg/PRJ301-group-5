@@ -56,6 +56,9 @@ public class ParentAbsenceServlet extends HttpServlet {
                 case "missing":
                     request.setAttribute("error", "Vui lòng nhập đầy đủ thông tin báo nghỉ.");
                     break;
+                case "invalidChild":
+                    request.setAttribute("error", "Bạn không có quyền báo nghỉ cho học sinh này.");
+                    break;
                 default:
                     break;
             }
@@ -93,6 +96,11 @@ public class ParentAbsenceServlet extends HttpServlet {
 
             int studentID = Integer.parseInt(studentIDRaw);
             Date attendanceDate = Date.valueOf(attendanceDateRaw);
+
+            if (!studentDAO.isStudentOfParent(studentID, parentID)) {
+                response.sendRedirect(request.getContextPath() + "/parent/absence?message=invalidChild");
+                return;
+            }
 
             boolean success = attendanceDAO.reportAbsent(studentID, attendanceDate, parentID, note.trim());
 

@@ -17,17 +17,19 @@ public class MealCount {
     private String className;
     private String levelName;
     private int presentCount;
+    private int mealCount;
 
     public MealCount() {
     }
 
     public MealCount(Date attendanceDate, int classID, String className,
-            String levelName, int presentCount) {
+            String levelName, int presentCount, int mealCount) {
         this.attendanceDate = attendanceDate;
         this.classID = classID;
         this.className = className;
         this.levelName = levelName;
         this.presentCount = presentCount;
+        this.mealCount = mealCount;
     }
 
     public Date getAttendanceDate() {
@@ -68,5 +70,13 @@ public class MealCount {
 
     public void setPresentCount(int presentCount) {
         this.presentCount = presentCount;
+    }
+
+    public int getMealCount() {
+        return mealCount;
+    }
+
+    public void setMealCount(int mealCount) {
+        this.mealCount = mealCount;
     }
 }
