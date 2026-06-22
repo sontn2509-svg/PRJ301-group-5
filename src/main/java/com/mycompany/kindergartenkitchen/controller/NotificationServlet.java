@@ -1,7 +1,8 @@
-package com.mycompany.kindergartenkitchen.servlet;
+package com.mycompany.kindergartenkitchen.controller;
 
-import com.mycompany.kindergartenkitchen.controller.NotificationController;
 import com.mycompany.kindergartenkitchen.model.UserNotification;
+import com.mycompany.kindergartenkitchen.service.NotificationService;
+import com.mycompany.kindergartenkitchen.service.impl.NotificationServiceImpl;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,7 +14,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * Servlet hiển thị và quản lý thông báo của user đang đăng nhập.
+ * Controller (Servlet) hiển thị và quản lý thông báo của user đang đăng nhập.
  * Dùng chung cho mọi role: Admin, Manager, Teacher, Parent, KitchenStaff.
  */
 @WebServlet(name = "NotificationServlet", urlPatterns = {"/notification/*"})
@@ -21,7 +22,7 @@ public class NotificationServlet extends HttpServlet {
 
     private static final String VIEW_LIST = "/jsp/ingredient/notification-list.jsp";
 
-    private final NotificationController notificationController = new NotificationController();
+    private final NotificationService notificationService = new NotificationServiceImpl();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -36,8 +37,8 @@ public class NotificationServlet extends HttpServlet {
 
         try {
             List<UserNotification> notificationList
-                    = notificationController.getNotificationByUserId(currentUserId);
-            int unreadCount = notificationController.getUnreadCount(currentUserId);
+                    = notificationService.getNotificationByUserId(currentUserId);
+            int unreadCount = notificationService.getUnreadCount(currentUserId);
 
             request.setAttribute("notificationList", notificationList);
             request.setAttribute("unreadCount", unreadCount);
@@ -56,7 +57,7 @@ public class NotificationServlet extends HttpServlet {
         String userNotificationIdParam = request.getParameter("userNotificationId");
         if (userNotificationIdParam != null) {
             int userNotificationId = Integer.parseInt(userNotificationIdParam);
-            notificationController.markAsRead(userNotificationId);
+            notificationService.markAsRead(userNotificationId);
         }
 
         response.sendRedirect(request.getContextPath() + "/notification");

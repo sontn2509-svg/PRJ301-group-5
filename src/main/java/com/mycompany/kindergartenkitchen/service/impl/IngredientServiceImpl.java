@@ -1,33 +1,37 @@
-package com.mycompany.kindergartenkitchen.controller;
+package com.mycompany.kindergartenkitchen.service.impl;
 
 import com.mycompany.kindergartenkitchen.dao.IngredientDao;
 import com.mycompany.kindergartenkitchen.dao.impl.IngredientDaoImpl;
 import com.mycompany.kindergartenkitchen.model.Ingredient;
+import com.mycompany.kindergartenkitchen.service.IngredientService;
 import java.sql.SQLException;
 import java.util.List;
 
 /**
- * Controller xử lý nghiệp vụ liên quan đến Ingredient.
- * Servlet gọi Controller, Controller gọi DAO.
+ * Triển khai nghiệp vụ Ingredient.
+ * Chuyển từ controller.IngredientController sang service.impl.IngredientServiceImpl.
  */
-public class IngredientController {
+public class IngredientServiceImpl implements IngredientService {
 
     private static final double DEFAULT_LOW_STOCK_THRESHOLD = 5.0;
 
     private final IngredientDao ingredientDao;
 
-    public IngredientController() {
+    public IngredientServiceImpl() {
         this.ingredientDao = new IngredientDaoImpl();
     }
 
+    @Override
     public List<Ingredient> getAllIngredient() throws SQLException {
         return ingredientDao.findAll();
     }
 
+    @Override
     public Ingredient getIngredientById(int ingredientId) throws SQLException {
         return ingredientDao.findById(ingredientId);
     }
 
+    @Override
     public boolean createIngredient(String ingredientName, String unit, double quantityInStock) {
         if (ingredientName == null || ingredientName.isBlank()) {
             return false;
@@ -51,6 +55,7 @@ public class IngredientController {
         }
     }
 
+    @Override
     public boolean updateIngredient(int ingredientId, String ingredientName,
             String unit, double quantityInStock) {
 
@@ -71,6 +76,7 @@ public class IngredientController {
         }
     }
 
+    @Override
     public boolean deactivateIngredient(int ingredientId) {
         try {
             return ingredientDao.deactivate(ingredientId);
@@ -79,6 +85,7 @@ public class IngredientController {
         }
     }
 
+    @Override
     public List<Ingredient> getLowStockIngredient() throws SQLException {
         return ingredientDao.findLowStock(DEFAULT_LOW_STOCK_THRESHOLD);
     }

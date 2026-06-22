@@ -1,4 +1,4 @@
-package com.mycompany.kindergartenkitchen.controller;
+package com.mycompany.kindergartenkitchen.service.impl;
 
 import com.mycompany.kindergartenkitchen.dao.IngredientDao;
 import com.mycompany.kindergartenkitchen.dao.IngredientUsageDao;
@@ -6,31 +6,31 @@ import com.mycompany.kindergartenkitchen.dao.impl.IngredientDaoImpl;
 import com.mycompany.kindergartenkitchen.dao.impl.IngredientUsageDaoImpl;
 import com.mycompany.kindergartenkitchen.model.Ingredient;
 import com.mycompany.kindergartenkitchen.model.IngredientUsage;
+import com.mycompany.kindergartenkitchen.service.IngredientUsageService;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 
 /**
- * Controller xử lý nghiệp vụ ghi nhận nguyên liệu đã dùng mỗi ngày.
- * Sau khi ghi nhận, trừ số lượng đã dùng khỏi tồn kho.
+ * Triển khai nghiệp vụ ghi nhận nguyên liệu đã dùng.
+ * Chuyển từ controller.IngredientUsageController sang service.impl.IngredientUsageServiceImpl.
  */
-public class IngredientUsageController {
+public class IngredientUsageServiceImpl implements IngredientUsageService {
 
     private final IngredientUsageDao ingredientUsageDao;
     private final IngredientDao ingredientDao;
 
-    public IngredientUsageController() {
+    public IngredientUsageServiceImpl() {
         this.ingredientUsageDao = new IngredientUsageDaoImpl();
         this.ingredientDao = new IngredientDaoImpl();
     }
 
+    @Override
     public List<IngredientUsage> getUsageByDate(Date usageDate) throws SQLException {
         return ingredientUsageDao.findByDate(usageDate);
     }
 
-    /**
-     * Ghi nhận nguyên liệu đã dùng và trừ vào tồn kho.
-     */
+    @Override
     public boolean recordUsage(int ingredientId, double quantityUsed, Date usageDate,
             int updatedBy, String note) {
 
@@ -60,6 +60,7 @@ public class IngredientUsageController {
         }
     }
 
+    @Override
     public boolean updateUsage(int usageId, double quantityUsed, String note) {
         IngredientUsage ingredientUsage = new IngredientUsage();
         ingredientUsage.setUsageId(usageId);

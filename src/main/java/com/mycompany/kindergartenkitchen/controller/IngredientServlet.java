@@ -1,7 +1,8 @@
-package com.mycompany.kindergartenkitchen.servlet;
+package com.mycompany.kindergartenkitchen.controller;
 
-import com.mycompany.kindergartenkitchen.controller.IngredientController;
 import com.mycompany.kindergartenkitchen.model.Ingredient;
+import com.mycompany.kindergartenkitchen.service.IngredientService;
+import com.mycompany.kindergartenkitchen.service.impl.IngredientServiceImpl;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,7 +13,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * Servlet chỉ làm nhiệm vụ: nhận request, parse param, gọi Controller, forward JSP.
+ * Controller (Servlet) xử lý request cho Ingredient.
+ * Chỉ làm nhiệm vụ: nhận request, parse param, gọi Service, forward JSP.
  * Không chứa logic nghiệp vụ.
  */
 @WebServlet(name = "IngredientServlet", urlPatterns = {"/ingredient/*"})
@@ -21,7 +23,7 @@ public class IngredientServlet extends HttpServlet {
     private static final String VIEW_LIST = "/jsp/ingredient/ingredient-list.jsp";
     private static final String VIEW_FORM = "/jsp/ingredient/ingredient-form.jsp";
 
-    private final IngredientController ingredientController = new IngredientController();
+    private final IngredientService ingredientService = new IngredientServiceImpl();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -75,7 +77,7 @@ public class IngredientServlet extends HttpServlet {
     private void handleList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
 
-        List<Ingredient> ingredientList = ingredientController.getAllIngredient();
+        List<Ingredient> ingredientList = ingredientService.getAllIngredient();
         request.setAttribute("ingredientList", ingredientList);
         request.getRequestDispatcher(VIEW_LIST).forward(request, response);
     }
@@ -83,7 +85,7 @@ public class IngredientServlet extends HttpServlet {
     private void handleLowStock(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
 
-        List<Ingredient> ingredientList = ingredientController.getLowStockIngredient();
+        List<Ingredient> ingredientList = ingredientService.getLowStockIngredient();
         request.setAttribute("ingredientList", ingredientList);
         request.setAttribute("isLowStockView", true);
         request.getRequestDispatcher(VIEW_LIST).forward(request, response);
@@ -94,7 +96,7 @@ public class IngredientServlet extends HttpServlet {
 
         String idParam = request.getParameter("id");
         if (idParam != null) {
-            Ingredient ingredient = ingredientController.getIngredientById(Integer.parseInt(idParam));
+            Ingredient ingredient = ingredientService.getIngredientById(Integer.parseInt(idParam));
             request.setAttribute("ingredient", ingredient);
         }
         request.getRequestDispatcher(VIEW_FORM).forward(request, response);
@@ -107,7 +109,7 @@ public class IngredientServlet extends HttpServlet {
         String unit = request.getParameter("unit");
         double quantityInStock = parseDoubleOrZero(request.getParameter("quantityInStock"));
 
-        boolean success = ingredientController.createIngredient(ingredientName, unit, quantityInStock);
+        boolean success = ingredientService.createIngredient(ingredientName, unit, quantityInStock);
         request.setAttribute("success", success);
         response.sendRedirect(request.getContextPath() + "/ingredient/list");
     }
@@ -120,7 +122,7 @@ public class IngredientServlet extends HttpServlet {
         String unit = request.getParameter("unit");
         double quantityInStock = parseDoubleOrZero(request.getParameter("quantityInStock"));
 
-        ingredientController.updateIngredient(ingredientId, ingredientName, unit, quantityInStock);
+        ingredientService.updateIngredient(ingredientId, ingredientName, unit, quantityInStock);
         response.sendRedirect(request.getContextPath() + "/ingredient/list");
     }
 
@@ -128,7 +130,7 @@ public class IngredientServlet extends HttpServlet {
             throws IOException {
 
         int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
-        ingredientController.deactivateIngredient(ingredientId);
+        ingredientService.deactivateIngredient(ingredientId);
         response.sendRedirect(request.getContextPath() + "/ingredient/list");
     }
 

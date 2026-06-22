@@ -1,9 +1,11 @@
-package com.mycompany.kindergartenkitchen.servlet;
+package com.mycompany.kindergartenkitchen.controller;
 
-import com.mycompany.kindergartenkitchen.controller.IngredientController;
-import com.mycompany.kindergartenkitchen.controller.IngredientUsageController;
 import com.mycompany.kindergartenkitchen.model.Ingredient;
 import com.mycompany.kindergartenkitchen.model.IngredientUsage;
+import com.mycompany.kindergartenkitchen.service.IngredientService;
+import com.mycompany.kindergartenkitchen.service.IngredientUsageService;
+import com.mycompany.kindergartenkitchen.service.impl.IngredientServiceImpl;
+import com.mycompany.kindergartenkitchen.service.impl.IngredientUsageServiceImpl;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -16,7 +18,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * Servlet ghi nhận nguyên liệu đã dùng mỗi ngày (dành cho nhân viên bếp).
+ * Controller (Servlet) ghi nhận nguyên liệu đã dùng mỗi ngày (dành cho nhân viên bếp).
  */
 @WebServlet(name = "IngredientUsageServlet", urlPatterns = {"/ingredient-usage/*"})
 public class IngredientUsageServlet extends HttpServlet {
@@ -24,9 +26,8 @@ public class IngredientUsageServlet extends HttpServlet {
     private static final String VIEW_LIST = "/jsp/ingredient/usage-list.jsp";
     private static final String VIEW_FORM = "/jsp/ingredient/usage-form.jsp";
 
-    private final IngredientUsageController ingredientUsageController
-            = new IngredientUsageController();
-    private final IngredientController ingredientController = new IngredientController();
+    private final IngredientUsageService ingredientUsageService = new IngredientUsageServiceImpl();
+    private final IngredientService ingredientService = new IngredientServiceImpl();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -68,8 +69,7 @@ public class IngredientUsageServlet extends HttpServlet {
         String note = request.getParameter("note");
         Date usageDate = Date.valueOf(java.time.LocalDate.now());
 
-        ingredientUsageController.recordUsage(
-                ingredientId, quantityUsed, usageDate, currentUserId, note);
+        ingredientUsageService.recordUsage(ingredientId, quantityUsed, usageDate, currentUserId, note);
 
         response.sendRedirect(request.getContextPath() + "/ingredient-usage/today");
     }
@@ -78,7 +78,7 @@ public class IngredientUsageServlet extends HttpServlet {
             throws ServletException, IOException, SQLException {
 
         Date today = Date.valueOf(java.time.LocalDate.now());
-        List<IngredientUsage> usageList = ingredientUsageController.getUsageByDate(today);
+        List<IngredientUsage> usageList = ingredientUsageService.getUsageByDate(today);
         request.setAttribute("usageList", usageList);
         request.getRequestDispatcher(VIEW_LIST).forward(request, response);
     }
@@ -86,7 +86,7 @@ public class IngredientUsageServlet extends HttpServlet {
     private void handleShowForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
 
-        List<Ingredient> ingredientList = ingredientController.getAllIngredient();
+        List<Ingredient> ingredientList = ingredientService.getAllIngredient();
         request.setAttribute("ingredientList", ingredientList);
         request.getRequestDispatcher(VIEW_FORM).forward(request, response);
     }
