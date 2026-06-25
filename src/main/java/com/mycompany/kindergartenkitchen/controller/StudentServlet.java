@@ -46,7 +46,9 @@ public class StudentServlet extends HttpServlet {
         if ("add".equals(action)) {
             request.setAttribute("classList", classDAO.getAllClasses());
             request.setAttribute("parents", studentDAO.getActiveParents());
-            request.getRequestDispatcher("/views/student-form.jsp").forward(request, response);
+
+            // Đã sửa đường dẫn ở đây: thêm thư mục "student/"
+            request.getRequestDispatcher("/views/student/student-form.jsp").forward(request, response);
             return;
         }
 
@@ -65,7 +67,9 @@ public class StudentServlet extends HttpServlet {
             request.setAttribute("student", student);
             request.setAttribute("classList", classDAO.getAllClasses());
             request.setAttribute("parents", studentDAO.getActiveParents());
-            request.getRequestDispatcher("/views/student-form.jsp").forward(request, response);
+
+            // Đã sửa đường dẫn ở đây: thêm thư mục "student/"
+            request.getRequestDispatcher("/views/student/student-form.jsp").forward(request, response);
             return;
         }
 
@@ -105,7 +109,8 @@ public class StudentServlet extends HttpServlet {
             }
         }
 
-        request.getRequestDispatcher("/views/student-list.jsp").forward(request, response);
+        // Đã sửa đường dẫn ở đây: thêm thư mục "student/"
+        request.getRequestDispatcher("/views/student/student-list.jsp").forward(request, response);
     }
 
     // ─── POST ────────────────────────────────────────────────────────────────

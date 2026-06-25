@@ -84,7 +84,8 @@ public class TeacherAttendanceServlet extends HttpServlet {
             }
         }
 
-        request.getRequestDispatcher("/views/teacher-attendance.jsp").forward(request, response);
+        // Đã sửa đường dẫn ở đây: thêm thư mục "teacher/"
+        request.getRequestDispatcher("/views/teacher/teacher-attendance.jsp").forward(request, response);
     }
 
     @Override

@@ -43,7 +43,9 @@ public class ClassServlet extends HttpServlet {
             // Hiển thị form thêm lớp
             request.setAttribute("levels", classDAO.getAllLevels());
             request.setAttribute("teachers", classDAO.getActiveTeachers());
-            request.getRequestDispatcher("/views/class-form.jsp").forward(request, response);
+
+            // Đã sửa đường dẫn ở đây: thêm thư mục "class/"
+            request.getRequestDispatcher("/views/class/class-form.jsp").forward(request, response);
             return;
         }
 
@@ -65,7 +67,9 @@ public class ClassServlet extends HttpServlet {
             request.setAttribute("classInfo", classInfo);
             request.setAttribute("levels", classDAO.getAllLevels());
             request.setAttribute("teachers", classDAO.getActiveTeachers());
-            request.getRequestDispatcher("/views/class-form.jsp").forward(request, response);
+
+            // Đã sửa đường dẫn ở đây: thêm thư mục "class/"
+            request.getRequestDispatcher("/views/class/class-form.jsp").forward(request, response);
             return;
         }
 
@@ -95,7 +99,8 @@ public class ClassServlet extends HttpServlet {
             }
         }
 
-        request.getRequestDispatcher("/views/class-list.jsp").forward(request, response);
+        // Đã sửa đường dẫn ở đây: thêm thư mục "class/"
+        request.getRequestDispatcher("/views/class/class-list.jsp").forward(request, response);
     }
 
     // ─── POST ────────────────────────────────────────────────────────────────

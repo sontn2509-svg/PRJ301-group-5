@@ -58,6 +58,7 @@ public class MealHistoryServlet extends HttpServlet {
         request.setAttribute("selectedMonth", month);
         request.setAttribute("mealHistoryList", attendanceDAO.getMealHistoryByParent(parentID, year, month));
 
-        request.getRequestDispatcher("/views/meal-history.jsp").forward(request, response);
+        // Đã sửa đường dẫn: trỏ vào thư mục "parent/"
+        request.getRequestDispatcher("/views/parent/meal-history.jsp").forward(request, response);
     }
 }

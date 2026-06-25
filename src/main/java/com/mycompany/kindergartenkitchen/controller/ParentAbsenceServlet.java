@@ -64,7 +64,8 @@ public class ParentAbsenceServlet extends HttpServlet {
             }
         }
 
-        request.getRequestDispatcher("/views/parent-absence.jsp").forward(request, response);
+        // Đã sửa đường dẫn: trỏ vào thư mục "parent/"
+        request.getRequestDispatcher("/views/parent/parent-absence.jsp").forward(request, response);
     }
 
     @Override

@@ -46,7 +46,8 @@ public class KitchenMealServlet extends HttpServlet {
             request.setAttribute("presentStudents", mealCountService.getPresentStudentsByDate(mealDate));
             request.setAttribute("totalMealCount", mealCountService.getTotalMealCount(mealDate));
 
-            request.getRequestDispatcher("/views/kitchen-meal-count.jsp").forward(request, response);
+            // Đã sửa đường dẫn ở đây: thêm thư mục "kitchen/"
+            request.getRequestDispatcher("/views/kitchen/kitchen-meal-count.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
