@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
 <body>
+<div class="app-container">
 <jsp:include page="/jsp/layout/sidebar-admin.jsp"/>
 <div class="main-content">
 <jsp:include page="/jsp/layout/header.jsp"/>
@@ -60,6 +61,7 @@
 </div></div>
 </div>
 </main>
+</div>
 </div>
 </body>
 </html>
