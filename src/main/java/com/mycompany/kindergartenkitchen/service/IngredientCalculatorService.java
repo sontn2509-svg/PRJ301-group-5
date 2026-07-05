@@ -28,4 +28,16 @@ public interface IngredientCalculatorService {
      * @return danh sách nguyên liệu kèm số lượng còn thiếu (âm = dư)
      */
     Map<String, Double> compareNeededVersusStock(Date menuDate) throws SQLException;
+
+    /**
+     * So sánh nguyên liệu CẦN dùng (theo công thức món trong thực đơn ngày đó
+     * + số suất ăn thực tế) với nguyên liệu THỰC TẾ đã được bếp ghi nhận dùng
+     * trong IngredientUsages cùng ngày.
+     *
+     * @param usageDate ngày cần kiểm tra
+     * @return danh sách nguyên liệu kèm chênh lệch (cần dùng - thực tế đã
+     *         dùng). Dương = ghi nhận ít hơn công thức (có thể thiếu ghi
+     *         nhận); âm = dùng nhiều hơn công thức (có thể hao hụt/lãng phí).
+     */
+    Map<String, Double> compareNeededVersusActualUsage(Date usageDate) throws SQLException;
 }

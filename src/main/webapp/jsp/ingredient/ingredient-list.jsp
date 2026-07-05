@@ -30,8 +30,34 @@
 <c:if test="${not empty errorMessage}">
     <div class="alert alert-error">${errorMessage}</div>
 </c:if>
-<c:if test="${not empty param.success && param.success == 'true'}">
-    <div class="alert alert-success">Đã lưu nguyên liệu thành công.</div>
+<%-- Toast thông báo: dùng query param thay vì setAttribute (bị mất sau redirect) --%>
+<c:if test="${param.success == 'true'}">
+    <div class="toast toast-success" id="toastMsg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m20 6-11 11-5-5"/></svg>
+        Đã lưu nguyên liệu thành công.
+        <button class="toast-close" onclick="document.getElementById('toastMsg').style.display='none'">&times;</button>
+    </div>
+</c:if>
+<c:if test="${param.success == 'false'}">
+    <div class="toast toast-error" id="toastMsg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        Lưu thất bại — vui lòng kiểm tra lại dữ liệu.
+        <button class="toast-close" onclick="document.getElementById('toastMsg').style.display='none'">&times;</button>
+    </div>
+</c:if>
+<c:if test="${param.deleted == 'true'}">
+    <div class="toast toast-warn" id="toastMsg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+        Đã ngừng sử dụng nguyên liệu này.
+        <button class="toast-close" onclick="document.getElementById('toastMsg').style.display='none'">&times;</button>
+    </div>
+</c:if>
+<c:if test="${param.deleted == 'false'}">
+    <div class="toast toast-error" id="toastMsg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        Không thể ngừng sử dụng — đã xảy ra lỗi.
+        <button class="toast-close" onclick="document.getElementById('toastMsg').style.display='none'">&times;</button>
+    </div>
 </c:if>
 
 <div class="toolbar">
@@ -101,14 +127,10 @@
                             <a class="icon-btn" title="Sửa" href="${pageContext.request.contextPath}/ingredient/form?id=${ing.ingredientId}">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                             </a>
-                            <form method="post" action="${pageContext.request.contextPath}/ingredient"
-                                  onsubmit="return confirm('Ngừng sử dụng nguyên liệu này?');" style="display:inline;">
-                                <input type="hidden" name="action" value="deactivate">
-                                <input type="hidden" name="ingredientId" value="${ing.ingredientId}">
-                                <button type="submit" class="icon-btn danger" title="Ngừng dùng">
+                            <button type="button" class="icon-btn danger" title="Ngừng dùng"
+                                        onclick="openDeactivateModal('${ing.ingredientId}', '${ing.ingredientName}')">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
                                 </button>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -116,5 +138,94 @@
         </div>
     </c:otherwise>
 </c:choose>
+
+
+<%-- ═══════════════════════════════════════════════════
+     MODAL XÁC NHẬN NGỪNG SỬ DỤNG (thay window.confirm)
+     ═══════════════════════════════════════════════════ --%>
+<div class="ing-modal-overlay" id="deactivateOverlay" onclick="closeDeactivateModal()" style="display:none;"></div>
+<div class="ing-modal" id="deactivateModal" style="display:none;" role="dialog" aria-modal="true">
+    <div class="ing-modal__icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ee5253" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6M10 11v6M14 11v6"/></svg>
+    </div>
+    <h3 class="ing-modal__title">Ngừng sử dụng nguyên liệu?</h3>
+    <p class="ing-modal__msg">Nguyên liệu <strong id="modalIngredientName"></strong> sẽ bị ẩn khỏi danh sách. Bạn có thể kích hoạt lại sau nếu cần.</p>
+    <div class="ing-modal__actions">
+        <button class="btn btn-secondary" onclick="closeDeactivateModal()">Huỷ</button>
+        <form method="post" action="${pageContext.request.contextPath}/ingredient" id="deactivateForm" style="display:inline;">
+            <input type="hidden" name="action" value="deactivate">
+            <input type="hidden" name="ingredientId" id="modalIngredientId" value="">
+            <button type="submit" class="btn btn-danger">Xác nhận ngừng dùng</button>
+        </form>
+    </div>
+</div>
+
+<style>
+/* ── Toast ─────────────────────────────────── */
+.toast {
+    display: flex; align-items: center; gap: 10px;
+    position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+    padding: 13px 18px; border-radius: 10px;
+    font-size: 13.5px; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,.13);
+    animation: slideUp .3s ease;
+    max-width: 360px;
+}
+.toast-success { background: #e9faf3; color: #0d6e4e; border: 1px solid #a8e6ce; }
+.toast-warn    { background: #fff8ec; color: #8a5700; border: 1px solid #ffd98a; }
+.toast-error   { background: #fff0f0; color: #b91c1c; border: 1px solid #fca5a5; }
+.toast-close   { margin-left: auto; background: none; border: none; font-size: 18px; cursor: pointer; opacity: .6; line-height: 1; }
+.toast-close:hover { opacity: 1; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ── Modal overlay ──────────────────────────── */
+.ing-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.38);
+    z-index: 8888; backdrop-filter: blur(2px);
+    animation: fadeIn .15s ease;
+}
+.ing-modal {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 8889;
+    background: #fff; border-radius: 16px;
+    padding: 32px 28px 24px;
+    width: 100%; max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.18);
+    animation: popIn .2s ease;
+}
+.ing-modal__icon  { margin-bottom: 14px; }
+.ing-modal__title { margin: 0 0 10px; font-size: 17px; color: #1a1a1a; }
+.ing-modal__msg   { font-size: 13.5px; color: #555; margin: 0 0 22px; line-height: 1.6; }
+.ing-modal__actions { display: flex; gap: 10px; justify-content: center; }
+.btn-danger { background: #ee5253; color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13.5px; }
+.btn-danger:hover { background: #d93535; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn  { from { transform: translate(-50%,-50%) scale(.92); opacity: 0; } to { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+</style>
+
+<script>
+/* ── Modal deactivate ───────────────────────── */
+function openDeactivateModal(id, name) {
+    document.getElementById('modalIngredientId').value = id;
+    document.getElementById('modalIngredientName').textContent = name;
+    document.getElementById('deactivateOverlay').style.display = 'block';
+    document.getElementById('deactivateModal').style.display   = 'block';
+}
+function closeDeactivateModal() {
+    document.getElementById('deactivateOverlay').style.display = 'none';
+    document.getElementById('deactivateModal').style.display   = 'none';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDeactivateModal();
+});
+
+/* ── Toast tự ẩn sau 4 giây ────────────────── */
+(function() {
+    var t = document.getElementById('toastMsg');
+    if (t) setTimeout(function() { t.style.display = 'none'; }, 4000);
+})();
+</script>
 
 <jsp:include page="/views/common/footer.jsp" />

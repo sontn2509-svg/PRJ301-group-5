@@ -1,6 +1,6 @@
 package com.mycompany.kindergartenkitchen.dao.impl;
 
-import com.mycompany.kindergartenkitchen.config.DbConnection;
+import com.mycompany.kindergartenkitchen.dao.DBContext; // Thay đổi import sang DBContext
 import com.mycompany.kindergartenkitchen.dao.UserNotificationDao;
 import com.mycompany.kindergartenkitchen.model.UserNotification;
 import java.sql.Connection;
@@ -11,11 +11,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implementation của UserNotificationDao.
- * Gắn 1 thông báo cho 1 user cụ thể, theo dõi trạng thái đã đọc.
- */
 public class UserNotificationDaoImpl implements UserNotificationDao {
+
+    // Tạo đối tượng DBContext dùng chung cho toàn bộ Class
+    private final DBContext db = new DBContext();
 
     private static final String SQL_INSERT
             = "INSERT INTO UserNotifications (NotificationID, UserID, IsRead) VALUES (?, ?, 0)";
@@ -38,7 +37,7 @@ public class UserNotificationDaoImpl implements UserNotificationDao {
 
     @Override
     public int insert(int notificationId, int userId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(
                         SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -51,6 +50,8 @@ public class UserNotificationDaoImpl implements UserNotificationDao {
                     return generatedKeys.getInt(1);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return -1;
     }
@@ -58,7 +59,7 @@ public class UserNotificationDaoImpl implements UserNotificationDao {
     @Override
     public List<UserNotification> findByUserId(int userId) throws SQLException {
         List<UserNotification> notificationList = new ArrayList<>();
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_USER_ID)) {
 
             statement.setInt(1, userId);
@@ -67,23 +68,27 @@ public class UserNotificationDaoImpl implements UserNotificationDao {
                     notificationList.add(mapResultSetToUserNotification(resultSet));
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return notificationList;
     }
 
     @Override
     public boolean markAsRead(int userNotificationId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_MARK_AS_READ)) {
 
             statement.setInt(1, userNotificationId);
             return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
     }
 
     @Override
     public int countUnreadByUserId(int userId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_COUNT_UNREAD)) {
 
             statement.setInt(1, userId);
@@ -92,6 +97,8 @@ public class UserNotificationDaoImpl implements UserNotificationDao {
                     return resultSet.getInt("UnreadCount");
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return 0;
     }

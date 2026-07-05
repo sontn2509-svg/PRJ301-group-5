@@ -110,8 +110,7 @@ public class IngredientServlet extends HttpServlet {
         double quantityInStock = parseDoubleOrZero(request.getParameter("quantityInStock"));
 
         boolean success = ingredientService.createIngredient(ingredientName, unit, quantityInStock);
-        request.setAttribute("success", success);
-        response.sendRedirect(request.getContextPath() + "/ingredient/list");
+        response.sendRedirect(request.getContextPath() + "/ingredient/list?success=" + success);
     }
 
     private void handleUpdate(HttpServletRequest request, HttpServletResponse response)
@@ -122,16 +121,16 @@ public class IngredientServlet extends HttpServlet {
         String unit = request.getParameter("unit");
         double quantityInStock = parseDoubleOrZero(request.getParameter("quantityInStock"));
 
-        ingredientService.updateIngredient(ingredientId, ingredientName, unit, quantityInStock);
-        response.sendRedirect(request.getContextPath() + "/ingredient/list");
+        boolean updated = ingredientService.updateIngredient(ingredientId, ingredientName, unit, quantityInStock);
+        response.sendRedirect(request.getContextPath() + "/ingredient/list?success=" + updated);
     }
 
     private void handleDeactivate(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
         int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
-        ingredientService.deactivateIngredient(ingredientId);
-        response.sendRedirect(request.getContextPath() + "/ingredient/list");
+        boolean deleted = ingredientService.deactivateIngredient(ingredientId);
+        response.sendRedirect(request.getContextPath() + "/ingredient/list?deleted=" + deleted);
     }
 
     private double parseDoubleOrZero(String value) {

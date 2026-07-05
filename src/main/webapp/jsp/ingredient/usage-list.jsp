@@ -28,6 +28,65 @@
     <div class="alert alert-error">${errorMessage}</div>
 </c:if>
 
+<div class="card" style="max-width:760px; margin-bottom:20px;">
+    <div class="card__head">
+        <h3>So sánh cần dùng vs thực tế đã dùng</h3>
+        <span class="badge badge-mute">Theo thực đơn hôm nay</span>
+    </div>
+    <div class="card__body">
+        <c:if test="${comparisonUnavailable}">
+            <div class="alert alert-warn">Chưa thể tính nhu cầu theo thực đơn hôm nay (chưa có thực đơn hoặc điểm danh cho ngày hôm nay).</div>
+        </c:if>
+        <c:if test="${not comparisonUnavailable}">
+            <c:choose>
+                <c:when test="${empty comparisonMap}">
+                    <div class="empty-state">
+                        <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12 11 14 15 10M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        <h3>Không có món nào trong thực đơn hôm nay</h3>
+                        <p>Khi thực đơn hôm nay được thiết lập, hệ thống sẽ tự tính lượng cần dùng để so sánh với thực tế.</p>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nguyên liệu</th>
+                                    <th>Chênh lệch (cần dùng &minus; thực tế)</th>
+                                    <th>Tình trạng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="entry" items="${comparisonMap}">
+                                    <tr>
+                                        <td>${entry.key}</td>
+                                        <td class="num">
+                                            <fmt:formatNumber value="${entry.value}" maxFractionDigits="2" />
+                                        </td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${entry.value > 0.01}">
+                                                    <span class="badge badge-warn">Ghi nhận ít hơn công thức</span>
+                                                </c:when>
+                                                <c:when test="${entry.value < -0.01}">
+                                                    <span class="badge badge-danger">Dùng nhiều hơn công thức</span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="badge badge-ok">Khớp công thức</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </c:if>
+    </div>
+</div>
+
 <div class="card" style="max-width:760px;">
     <div class="card__head">
         <h3>Nhật ký hôm nay</h3>

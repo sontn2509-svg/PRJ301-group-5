@@ -1,6 +1,6 @@
 package com.mycompany.kindergartenkitchen.dao.impl;
 
-import com.mycompany.kindergartenkitchen.config.DbConnection;
+import com.mycompany.kindergartenkitchen.dao.DBContext; // Thay đổi import sang DBContext
 import com.mycompany.kindergartenkitchen.dao.NotificationDao;
 import com.mycompany.kindergartenkitchen.model.Notification;
 import java.sql.Connection;
@@ -11,11 +11,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implementation của NotificationDao.
- * Lưu nội dung thông báo (chưa gắn với user cụ thể).
- */
 public class NotificationDaoImpl implements NotificationDao {
+
+    // Tạo đối tượng DBContext dùng chung cho toàn bộ Class
+    private final DBContext db = new DBContext();
 
     private static final String SQL_INSERT
             = "INSERT INTO Notifications (Title, Message, NotificationType, RelatedID, CreatedBy) "
@@ -31,7 +30,7 @@ public class NotificationDaoImpl implements NotificationDao {
 
     @Override
     public int insert(Notification notification) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(
                         SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -58,13 +57,15 @@ public class NotificationDaoImpl implements NotificationDao {
                     return generatedKeys.getInt(1);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return -1;
     }
 
     @Override
     public Notification findById(int notificationId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_ID)) {
 
             statement.setInt(1, notificationId);
@@ -73,6 +74,8 @@ public class NotificationDaoImpl implements NotificationDao {
                     return mapResultSetToNotification(resultSet);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return null;
     }
@@ -80,13 +83,15 @@ public class NotificationDaoImpl implements NotificationDao {
     @Override
     public List<Notification> findAll() throws SQLException {
         List<Notification> notificationList = new ArrayList<>();
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_ALL);
                 ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 notificationList.add(mapResultSetToNotification(resultSet));
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return notificationList;
     }

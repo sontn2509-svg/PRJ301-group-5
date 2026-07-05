@@ -60,6 +60,6 @@ public class NotificationServlet extends HttpServlet {
             notificationService.markAsRead(userNotificationId);
         }
 
-        response.sendRedirect(request.getContextPath() + "/notification");
+        response.sendRedirect(request.getContextPath() + "/notification?marked=true");
     }
 }

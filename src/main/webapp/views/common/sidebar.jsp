@@ -73,6 +73,19 @@
         </div>
         <% } %>
 
+        <% if ("PARENT".equals(role)) { %>
+        <div class="app-sidebar__group">
+            <div class="app-sidebar__group-label">Minh bạch bữa ăn</div>
+            <a class="app-sidebar__link ${currentPath.contains('/transparency') ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/ingredient-import/transparency">
+                <span class="app-sidebar__link-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                </span>
+                Nguyên liệu tuần này
+            </a>
+        </div>
+        <% } %>
+
         <div class="app-sidebar__group">
             <div class="app-sidebar__group-label">Bếp &amp; Kho nguyên liệu</div>
             <a class="app-sidebar__link ${currentPath.contains('/ingredient/') ? 'is-active' : ''}"
@@ -82,6 +95,15 @@
                 </span>
                 Nguyên liệu
             </a>
+            <% if ("ADMIN".equals(role) || "MANAGER".equals(role)) { %>
+            <a class="app-sidebar__link ${currentPath.contains('/dish-ingredient') ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/dish-ingredient/list">
+                <span class="app-sidebar__link-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2-3-2Z"/></svg>
+                </span>
+                Công thức món
+            </a>
+            <% } %>
             <a class="app-sidebar__link ${currentPath.contains('ingredient-import') ? 'is-active' : ''}"
                href="${pageContext.request.contextPath}/ingredient-import/list">
                 <span class="app-sidebar__link-icon">

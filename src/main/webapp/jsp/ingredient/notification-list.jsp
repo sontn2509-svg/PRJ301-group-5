@@ -26,6 +26,25 @@
             </c:choose>
         </p>
     </div>
+    <%-- Nút "Đọc tất cả" chỉ hiện khi còn thông báo chưa đọc --%>
+    <c:if test="${unreadCount > 0}">
+        <button class="btn btn-ghost" onclick="markAllRead()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="m20 6-11 11-5-5"/></svg>
+            Đánh dấu tất cả đã đọc
+        </button>
+    </c:if>
+</div>
+
+<%-- Form ẩn: submit từng cái bằng JS nếu muốn batch; tạm thời reload từng item --%>
+<div id="markAllForms" style="display:none;">
+    <c:forEach var="n" items="${notificationList}">
+        <c:if test="${!n.read}">
+            <form method="post" action="${pageContext.request.contextPath}/notification"
+                  class="markReadForm">
+                <input type="hidden" name="userNotificationId" value="${n.userNotificationId}">
+            </form>
+        </c:if>
+    </c:forEach>
 </div>
 
 <c:if test="${not empty errorMessage}">
@@ -66,7 +85,14 @@
                     <div class="notif-item__body">
                         <div class="notif-item__title">${n.title}</div>
                         <div class="notif-item__msg">${n.message}</div>
-                        <div class="notif-item__time"><fmt:formatDate value="${n.createdAt}" pattern="dd/MM/yyyy HH:mm" /></div>
+                        <div class="notif-item__time">
+                            <c:choose>
+                                <c:when test="${not empty n.createdAt}">
+                                    <fmt:formatDate value="${n.createdAt}" type="both" pattern="dd/MM/yyyy HH:mm" />
+                                </c:when>
+                                <c:otherwise>&mdash;</c:otherwise>
+                            </c:choose>
+                        </div>
                     </div>
                     <c:if test="${!n.read}">
                         <form method="post" action="${pageContext.request.contextPath}/notification" class="notif-item__mark">
@@ -79,5 +105,38 @@
         </div>
     </c:otherwise>
 </c:choose>
+
+
+<c:if test="${param.marked == 'true'}">
+    <div class="toast toast-success" id="notifToast" style="position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:10px;font-size:13.5px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.13);background:#e9faf3;color:#0d6e4e;border:1px solid #a8e6ce;max-width:360px;animation:slideUp .3s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m20 6-11 11-5-5"/></svg>
+        Đã đánh dấu đã đọc.
+        <button onclick="document.getElementById('notifToast').style.display='none'" style="margin-left:auto;background:none;border:none;font-size:18px;cursor:pointer;opacity:.6;">&times;</button>
+    </div>
+    <style>@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}</style>
+    <script>(function(){var t=document.getElementById('notifToast');if(t)setTimeout(function(){t.style.display='none'},4000);})()</script>
+</c:if>
+
+<script>
+function markAllRead() {
+    var forms = document.querySelectorAll('.markReadForm');
+    if (forms.length === 0) return;
+    /* Submit tuần tự: chỉ submit form cuối cùng thật sự,
+       các form còn lại gửi bằng fetch để không reload nhiều lần */
+    var fetches = [];
+    for (var i = 0; i < forms.length - 1; i++) {
+        var fd = new FormData(forms[i]);
+        fetches.push(fetch(forms[i].action, { method: 'POST', body: fd }));
+    }
+    Promise.all(fetches).then(function() {
+        /* Submit form cuối → redirect về trang với param marked=true */
+        var last = forms[forms.length - 1];
+        var input = document.createElement('input');
+        input.type = 'hidden'; input.name = 'markAll'; input.value = 'true';
+        last.appendChild(input);
+        last.submit();
+    });
+}
+</script>
 
 <jsp:include page="/views/common/footer.jsp" />

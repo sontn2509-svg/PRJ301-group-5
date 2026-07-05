@@ -1,6 +1,6 @@
 package com.mycompany.kindergartenkitchen.dao.impl;
 
-import com.mycompany.kindergartenkitchen.config.DbConnection;
+import com.mycompany.kindergartenkitchen.dao.DBContext; // Thay đổi import sang DBContext
 import com.mycompany.kindergartenkitchen.dao.IngredientImportDao;
 import com.mycompany.kindergartenkitchen.model.IngredientImport;
 import java.sql.Connection;
@@ -17,6 +17,9 @@ import java.util.List;
  * Quản lý phiếu nhập kho nguyên liệu.
  */
 public class IngredientImportDaoImpl implements IngredientImportDao {
+
+    // Khởi tạo đối tượng DBContext dùng chung cho toàn bộ Class
+    private final DBContext db = new DBContext();
 
     private static final String SQL_FIND_ALL
             = "SELECT ii.ImportID, ii.IngredientID, ii.Quantity, ii.UnitPrice, ii.TotalPrice, "
@@ -61,13 +64,15 @@ public class IngredientImportDaoImpl implements IngredientImportDao {
     @Override
     public List<IngredientImport> findAll() throws SQLException {
         List<IngredientImport> importList = new ArrayList<>();
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_ALL);
                 ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 importList.add(mapResultSetToIngredientImport(resultSet));
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return importList;
     }
@@ -75,7 +80,7 @@ public class IngredientImportDaoImpl implements IngredientImportDao {
     @Override
     public List<IngredientImport> findByDateRange(Date fromDate, Date toDate) throws SQLException {
         List<IngredientImport> importList = new ArrayList<>();
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_DATE_RANGE)) {
 
             statement.setDate(1, fromDate);
@@ -85,13 +90,15 @@ public class IngredientImportDaoImpl implements IngredientImportDao {
                     importList.add(mapResultSetToIngredientImport(resultSet));
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return importList;
     }
 
     @Override
     public IngredientImport findById(int importId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_ID)) {
 
             statement.setInt(1, importId);
@@ -100,13 +107,15 @@ public class IngredientImportDaoImpl implements IngredientImportDao {
                     return mapResultSetToIngredientImport(resultSet);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return null;
     }
 
     @Override
     public int insert(IngredientImport ingredientImport) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(
                         SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -124,23 +133,27 @@ public class IngredientImportDaoImpl implements IngredientImportDao {
                     return generatedKeys.getInt(1);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return -1;
     }
 
     @Override
     public boolean delete(int importId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_DELETE)) {
 
             statement.setInt(1, importId);
             return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
     }
 
     @Override
     public double sumTotalCostByDateRange(Date fromDate, Date toDate) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_SUM_TOTAL_COST)) {
 
             statement.setDate(1, fromDate);
@@ -150,6 +163,8 @@ public class IngredientImportDaoImpl implements IngredientImportDao {
                     return resultSet.getDouble("TotalCost");
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return 0;
     }

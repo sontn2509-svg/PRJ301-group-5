@@ -1,8 +1,9 @@
 package com.mycompany.kindergartenkitchen.dao.impl;
 
-import com.mycompany.kindergartenkitchen.config.DbConnection;
+import com.mycompany.kindergartenkitchen.dao.DBContext;
 import com.mycompany.kindergartenkitchen.dao.DishIngredientDao;
 import com.mycompany.kindergartenkitchen.model.DishIngredient;
+import com.mycompany.kindergartenkitchen.model.DishOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,11 +12,21 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implementation của DishIngredientDao.
- * Quản lý công thức món: 1 món cần những nguyên liệu nào, định lượng/học sinh.
- */
 public class DishIngredientDaoImpl implements DishIngredientDao {
+
+    // === TẠO LUÔN ĐỐI TƯỢNG Ở ĐÂY ĐỂ DÙNG CHUNG CHO TOÀN CLASS ===
+    private final DBContext db = new DBContext();
+
+    private static final String SQL_FIND_ALL
+            = "SELECT di.DishIngredientID, di.DishID, di.IngredientID, di.QuantityPerStudent, "
+            + "d.DishName, i.IngredientName, i.Unit "
+            + "FROM DishIngredients di "
+            + "JOIN Dishes d ON di.DishID = d.DishID "
+            + "JOIN Ingredients i ON di.IngredientID = i.IngredientID "
+            + "ORDER BY d.DishName, i.IngredientName";
+
+    private static final String SQL_FIND_ALL_ACTIVE_DISH_OPTIONS
+            = "SELECT DishID, DishName FROM Dishes WHERE Status = 1 ORDER BY DishName";
 
     private static final String SQL_FIND_BY_DISH_ID
             = "SELECT di.DishIngredientID, di.DishID, di.IngredientID, di.QuantityPerStudent, "
@@ -44,9 +55,43 @@ public class DishIngredientDaoImpl implements DishIngredientDao {
             = "DELETE FROM DishIngredients WHERE DishIngredientID = ?";
 
     @Override
+    public List<DishIngredient> findAll() throws SQLException {
+        List<DishIngredient> dishIngredientList = new ArrayList<>();
+        try (Connection connection = db.getConnection();
+                PreparedStatement statement = connection.prepareStatement(SQL_FIND_ALL);
+                ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                dishIngredientList.add(mapResultSetToDishIngredient(resultSet));
+            }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi DBContext: " + e.getMessage());
+        }
+        return dishIngredientList;
+    }
+
+    @Override
+    public List<DishOption> findAllActiveDishOptions() throws SQLException {
+        List<DishOption> dishOptionList = new ArrayList<>();
+        try (Connection connection = db.getConnection();
+                PreparedStatement statement = connection.prepareStatement(SQL_FIND_ALL_ACTIVE_DISH_OPTIONS);
+                ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                dishOptionList.add(new DishOption(
+                        resultSet.getInt("DishID"), resultSet.getString("DishName")));
+            }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi DBContext: " + e.getMessage());
+        }
+        return dishOptionList;
+    }
+
+    @Override
     public List<DishIngredient> findByDishId(int dishId) throws SQLException {
         List<DishIngredient> dishIngredientList = new ArrayList<>();
-        try (Connection connection = DbConnection.getConnection();
+        // Trong try-with-resources chỉ cần gọi thẳng từ biến 'db' dùng chung
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_DISH_ID)) {
 
             statement.setInt(1, dishId);
@@ -55,13 +100,15 @@ public class DishIngredientDaoImpl implements DishIngredientDao {
                     dishIngredientList.add(mapResultSetToDishIngredient(resultSet));
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi DBContext: " + e.getMessage());
         }
         return dishIngredientList;
     }
 
     @Override
     public DishIngredient findById(int dishIngredientId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_ID)) {
 
             statement.setInt(1, dishIngredientId);
@@ -70,13 +117,15 @@ public class DishIngredientDaoImpl implements DishIngredientDao {
                     return mapResultSetToDishIngredient(resultSet);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi DBContext: " + e.getMessage());
         }
         return null;
     }
 
     @Override
     public int insert(DishIngredient dishIngredient) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(
                         SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -90,28 +139,34 @@ public class DishIngredientDaoImpl implements DishIngredientDao {
                     return generatedKeys.getInt(1);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi DBContext: " + e.getMessage());
         }
         return -1;
     }
 
     @Override
     public boolean update(DishIngredient dishIngredient) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_UPDATE)) {
 
             statement.setDouble(1, dishIngredient.getQuantityPerStudent());
             statement.setInt(2, dishIngredient.getDishIngredientId());
             return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new SQLException("Lỗi DBContext: " + e.getMessage());
         }
     }
 
     @Override
     public boolean delete(int dishIngredientId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_DELETE)) {
 
             statement.setInt(1, dishIngredientId);
             return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new SQLException("Lỗi DBContext: " + e.getMessage());
         }
     }
 

@@ -1,6 +1,6 @@
 package com.mycompany.kindergartenkitchen.service.impl;
 
-import com.mycompany.kindergartenkitchen.config.DbConnection;
+import com.mycompany.kindergartenkitchen.dao.DBContext; // Thay đổi import sang DBContext
 import com.mycompany.kindergartenkitchen.dao.DishIngredientDao;
 import com.mycompany.kindergartenkitchen.dao.IngredientDao;
 import com.mycompany.kindergartenkitchen.dao.impl.DishIngredientDaoImpl;
@@ -17,20 +17,22 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Implementation của IngredientCalculatorService.
- * Công thức: SốLượngCần = QuantityPerStudent x SốSuấtĂnThựcTế
- */
 public class IngredientCalculatorServiceImpl implements IngredientCalculatorService {
 
-    /* Lấy danh sách món + số suất ăn của 1 ngày, dựa trên Menu + Attendance */
+    // Khởi tạo DBContext cục bộ phục vụ cho luồng nghiệp vụ hỗn hợp của Service
+    private final DBContext db = new DBContext();
+
     private static final String SQL_MENU_DISH_OF_DATE
             = "SELECT DISTINCT md.DishID "
             + "FROM MenuDetails md "
             + "JOIN Menus m ON md.MenuID = m.MenuID "
             + "WHERE md.MenuDate = ?";
 
-    /* Đếm số suất ăn thực tế trong countStudentForDate(), tách riêng để gọi theo từng ngày */
+    private static final String SQL_ACTUAL_USAGE_OF_DATE
+            = "SELECT IngredientID, SUM(QuantityUsed) AS TotalUsed "
+            + "FROM IngredientUsages "
+            + "WHERE UsageDate = ? "
+            + "GROUP BY IngredientID";
 
     private final DishIngredientDao dishIngredientDao;
     private final IngredientDao ingredientDao;
@@ -55,9 +57,57 @@ public class IngredientCalculatorServiceImpl implements IngredientCalculatorServ
     @Override
     public Map<String, Double> compareNeededVersusStock(Date menuDate) throws SQLException {
 
+        Map<Integer, Double> neededByIngredientId = getNeededByIngredientId(menuDate);
+
+        /* So sánh với tồn kho hiện tại */
+        Map<String, Double> comparisonResult = new LinkedHashMap<>();
+        for (Map.Entry<Integer, Double> entry : neededByIngredientId.entrySet()) {
+            Ingredient ingredient = ingredientDao.findById(entry.getKey());
+            if (ingredient != null) {
+                double shortageQuantity = entry.getValue() - ingredient.getQuantityInStock();
+                comparisonResult.put(ingredient.getIngredientName(), shortageQuantity);
+            }
+        }
+        return comparisonResult;
+    }
+
+    @Override
+    public Map<String, Double> compareNeededVersusActualUsage(Date usageDate) throws SQLException {
+
+        Map<Integer, Double> neededByIngredientId = getNeededByIngredientId(usageDate);
+        Map<Integer, Double> actualUsedByIngredientId = getActualUsedByIngredientId(usageDate);
+
+        /* Gộp cả 2 chiều: nguyên liệu có trong công thức nhưng chưa ghi nhận dùng
+           vẫn phải hiện ra (để biết bếp còn thiếu ghi nhận), và ngược lại. */
+        Map<String, Double> comparisonResult = new LinkedHashMap<>();
+        Map<Integer, Double> allIngredientIds = new LinkedHashMap<>(neededByIngredientId);
+        for (Integer ingredientId : actualUsedByIngredientId.keySet()) {
+            allIngredientIds.putIfAbsent(ingredientId, 0.0);
+        }
+
+        for (Integer ingredientId : allIngredientIds.keySet()) {
+            double needed = neededByIngredientId.getOrDefault(ingredientId, 0.0);
+            double actualUsed = actualUsedByIngredientId.getOrDefault(ingredientId, 0.0);
+            Ingredient ingredient = ingredientDao.findById(ingredientId);
+            if (ingredient != null) {
+                comparisonResult.put(ingredient.getIngredientName(), needed - actualUsed);
+            }
+        }
+        return comparisonResult;
+    }
+
+    /**
+     * Tính tổng nguyên liệu CẦN dùng cho tất cả món trong thực đơn của 1 ngày,
+     * dựa trên công thức món (QuantityPerStudent) nhân số suất ăn thực tế.
+     * Dùng chung cho cả 2 chiều so sánh (vs tồn kho, vs thực tế đã dùng).
+     */
+    private Map<Integer, Double> getNeededByIngredientId(Date menuDate) throws SQLException {
         Map<Integer, Double> neededByIngredientId = new HashMap<>();
 
-        try (Connection connection = DbConnection.getConnection()) {
+        // Sử dụng db.getConnection() thay cho DbConnection tĩnh cũ
+        try (Connection connection = db.getConnection()) {
+
+            int studentCount = countStudentForDate(connection, menuDate);
 
             /* Bước 1: lấy danh sách DishID có trong menu của ngày đó */
             try (PreparedStatement dishStatement
@@ -71,7 +121,6 @@ public class IngredientCalculatorServiceImpl implements IngredientCalculatorServ
 
                         /* Bước 2: với mỗi món, cộng dồn nguyên liệu cần */
                         for (DishIngredient dishIngredient : dishIngredientDao.findByDishId(dishId)) {
-                            int studentCount = countStudentForDate(connection, menuDate);
                             double neededQuantity
                                     = dishIngredient.getQuantityPerStudent() * studentCount;
 
@@ -81,21 +130,35 @@ public class IngredientCalculatorServiceImpl implements IngredientCalculatorServ
                     }
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi xử lý kết nối từ DBContext: " + e.getMessage());
         }
-
-        /* Bước 3: so sánh với tồn kho hiện tại */
-        Map<String, Double> comparisonResult = new LinkedHashMap<>();
-        for (Map.Entry<Integer, Double> entry : neededByIngredientId.entrySet()) {
-            Ingredient ingredient = ingredientDao.findById(entry.getKey());
-            if (ingredient != null) {
-                double shortageQuantity = entry.getValue() - ingredient.getQuantityInStock();
-                comparisonResult.put(ingredient.getIngredientName(), shortageQuantity);
-            }
-        }
-        return comparisonResult;
+        return neededByIngredientId;
     }
 
-    /* Đếm số suất ăn thực tế của 1 ngày — tạm tính theo toàn trường, có thể tách theo LevelID */
+    /**
+     * Tổng số lượng đã được bếp ghi nhận dùng thực tế (IngredientUsages) trong
+     * 1 ngày, cộng dồn theo từng nguyên liệu.
+     */
+    private Map<Integer, Double> getActualUsedByIngredientId(Date usageDate) throws SQLException {
+        Map<Integer, Double> actualUsedByIngredientId = new HashMap<>();
+
+        try (Connection connection = db.getConnection();
+                PreparedStatement statement = connection.prepareStatement(SQL_ACTUAL_USAGE_OF_DATE)) {
+
+            statement.setDate(1, usageDate);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    actualUsedByIngredientId.put(
+                            resultSet.getInt("IngredientID"), resultSet.getDouble("TotalUsed"));
+                }
+            }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi xử lý kết nối từ DBContext: " + e.getMessage());
+        }
+        return actualUsedByIngredientId;
+    }
+
     private int countStudentForDate(Connection connection, Date attendanceDate) throws SQLException {
         String sql = "SELECT COUNT(*) AS StudentCount FROM Students s "
                 + "WHERE s.StudentID NOT IN ("

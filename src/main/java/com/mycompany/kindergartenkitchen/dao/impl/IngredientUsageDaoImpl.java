@@ -1,6 +1,6 @@
 package com.mycompany.kindergartenkitchen.dao.impl;
 
-import com.mycompany.kindergartenkitchen.config.DbConnection;
+import com.mycompany.kindergartenkitchen.dao.DBContext; // Thay đổi import sang DBContext
 import com.mycompany.kindergartenkitchen.dao.IngredientUsageDao;
 import com.mycompany.kindergartenkitchen.model.IngredientUsage;
 import java.sql.Connection;
@@ -12,11 +12,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implementation của IngredientUsageDao.
- * Quản lý nguyên liệu thực tế bếp đã dùng mỗi ngày.
- */
 public class IngredientUsageDaoImpl implements IngredientUsageDao {
+
+    // Tạo đối tượng DBContext dùng chung cho toàn bộ Class
+    private final DBContext db = new DBContext();
 
     private static final String SQL_FIND_BY_DATE
             = "SELECT iu.UsageID, iu.IngredientID, iu.QuantityUsed, iu.UsageDate, "
@@ -48,7 +47,7 @@ public class IngredientUsageDaoImpl implements IngredientUsageDao {
     @Override
     public List<IngredientUsage> findByDate(Date usageDate) throws SQLException {
         List<IngredientUsage> usageList = new ArrayList<>();
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_DATE)) {
 
             statement.setDate(1, usageDate);
@@ -57,13 +56,15 @@ public class IngredientUsageDaoImpl implements IngredientUsageDao {
                     usageList.add(mapResultSetToIngredientUsage(resultSet));
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return usageList;
     }
 
     @Override
     public IngredientUsage findById(int usageId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_ID)) {
 
             statement.setInt(1, usageId);
@@ -72,13 +73,15 @@ public class IngredientUsageDaoImpl implements IngredientUsageDao {
                     return mapResultSetToIngredientUsage(resultSet);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return null;
     }
 
     @Override
     public int insert(IngredientUsage ingredientUsage) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(
                         SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -94,29 +97,35 @@ public class IngredientUsageDaoImpl implements IngredientUsageDao {
                     return generatedKeys.getInt(1);
                 }
             }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return -1;
     }
 
     @Override
     public boolean update(IngredientUsage ingredientUsage) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_UPDATE)) {
 
             statement.setDouble(1, ingredientUsage.getQuantityUsed());
             statement.setString(2, ingredientUsage.getNote());
             statement.setInt(3, ingredientUsage.getUsageId());
             return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
     }
 
     @Override
     public boolean delete(int usageId) throws SQLException {
-        try (Connection connection = DbConnection.getConnection();
+        try (Connection connection = db.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SQL_DELETE)) {
 
             statement.setInt(1, usageId);
             return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
     }
 
