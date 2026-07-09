@@ -1,9 +1,11 @@
 package com.mycompany.kindergartenkitchen.service.impl;
 
+import com.mycompany.kindergartenkitchen.dao.DishDao;
 import com.mycompany.kindergartenkitchen.dao.DishIngredientDao;
+import com.mycompany.kindergartenkitchen.dao.impl.DishDaoImpl;
 import com.mycompany.kindergartenkitchen.dao.impl.DishIngredientDaoImpl;
+import com.mycompany.kindergartenkitchen.model.Dish;
 import com.mycompany.kindergartenkitchen.model.DishIngredient;
-import com.mycompany.kindergartenkitchen.model.DishOption;
 import com.mycompany.kindergartenkitchen.service.DishIngredientService;
 import java.sql.SQLException;
 import java.util.List;
@@ -11,9 +13,11 @@ import java.util.List;
 public class DishIngredientServiceImpl implements DishIngredientService {
 
     private final DishIngredientDao dishIngredientDao;
+    private final DishDao dishDao;
 
     public DishIngredientServiceImpl() {
         this.dishIngredientDao = new DishIngredientDaoImpl();
+        this.dishDao = new DishDaoImpl();
     }
 
     @Override
@@ -27,8 +31,8 @@ public class DishIngredientServiceImpl implements DishIngredientService {
     }
 
     @Override
-    public List<DishOption> getAllActiveDishOptions() throws SQLException {
-        return dishIngredientDao.findAllActiveDishOptions();
+    public List<Dish> getAllActiveDishOptions() throws SQLException {
+        return dishDao.findAllActive();
     }
 
     @Override

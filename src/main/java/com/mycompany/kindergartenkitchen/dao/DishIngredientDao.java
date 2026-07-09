@@ -1,7 +1,6 @@
 package com.mycompany.kindergartenkitchen.dao;
 
 import com.mycompany.kindergartenkitchen.model.DishIngredient;
-import com.mycompany.kindergartenkitchen.model.DishOption;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -16,12 +15,6 @@ public interface DishIngredientDao {
      * liệu), dùng cho trang quản lý công thức xem theo nhóm món.
      */
     List<DishIngredient> findAll() throws SQLException;
-
-    /**
-     * Lấy danh sách rút gọn (id + tên) các món đang hoạt động, dùng để đổ vào
-     * dropdown chọn món khi thêm/sửa công thức.
-     */
-    List<DishOption> findAllActiveDishOptions() throws SQLException;
 
     List<DishIngredient> findByDishId(int dishId) throws SQLException;
 

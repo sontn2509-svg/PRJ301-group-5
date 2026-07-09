@@ -30,6 +30,7 @@
 <c:if test="${not empty errorMessage}">
     <div class="alert alert-error">${errorMessage}</div>
 </c:if>
+
 <%-- Toast thông báo: dùng query param thay vì setAttribute (bị mất sau redirect) --%>
 <c:if test="${param.success == 'true'}">
     <div class="toast toast-success" id="toastMsg">
@@ -89,8 +90,6 @@
     <c:otherwise>
         <div class="stock-grid">
             <c:forEach var="ing" items="${ingredientList}">
-                <%-- Ngưỡng cảnh báo demo phía giao diện: <=5 đỏ, <=15 vàng, còn lại xanh.
-                     Ngưỡng nghiệp vụ thật (low-stock) đã được xử lý ở DAO (<=5). --%>
                 <c:set var="qty" value="${ing.quantityInStock}" />
                 <c:choose>
                     <c:when test="${qty <= 5}"><c:set var="levelClass" value="is-low" /></c:when>
@@ -122,15 +121,17 @@
                     </div>
 
                     <div class="stock-tag__foot">
-                        <a class="btn btn-secondary btn-sm" href="${pageContext.request.contextPath}/ingredient-import/form">Nhập kho</a>
+                        <a class="btn btn-secondary btn-sm"
+                           href="${pageContext.request.contextPath}/ingredient-import/form">Nhập kho</a>
                         <div class="stock-tag__actions">
-                            <a class="icon-btn" title="Sửa" href="${pageContext.request.contextPath}/ingredient/form?id=${ing.ingredientId}">
+                            <a class="icon-btn" title="Sửa"
+                               href="${pageContext.request.contextPath}/ingredient/form?id=${ing.ingredientId}">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                             </a>
                             <button type="button" class="icon-btn danger" title="Ngừng dùng"
-                                        onclick="openDeactivateModal('${ing.ingredientId}', '${ing.ingredientName}')">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
-                                </button>
+                                    onclick="openDeactivateModal('${ing.ingredientId}', '${ing.ingredientName}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -139,20 +140,26 @@
     </c:otherwise>
 </c:choose>
 
-
 <%-- ═══════════════════════════════════════════════════
-     MODAL XÁC NHẬN NGỪNG SỬ DỤNG (thay window.confirm)
+     MODAL XÁC NHẬN NGỪNG SỬ DỤNG
      ═══════════════════════════════════════════════════ --%>
-<div class="ing-modal-overlay" id="deactivateOverlay" onclick="closeDeactivateModal()" style="display:none;"></div>
+<div class="ing-modal-overlay" id="deactivateOverlay"
+     onclick="closeDeactivateModal()" style="display:none;"></div>
 <div class="ing-modal" id="deactivateModal" style="display:none;" role="dialog" aria-modal="true">
     <div class="ing-modal__icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ee5253" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6M10 11v6M14 11v6"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ee5253" stroke-width="2">
+            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6M10 11v6M14 11v6"/>
+        </svg>
     </div>
     <h3 class="ing-modal__title">Ngừng sử dụng nguyên liệu?</h3>
-    <p class="ing-modal__msg">Nguyên liệu <strong id="modalIngredientName"></strong> sẽ bị ẩn khỏi danh sách. Bạn có thể kích hoạt lại sau nếu cần.</p>
+    <p class="ing-modal__msg">
+        Nguyên liệu <strong id="modalIngredientName"></strong> sẽ bị ẩn khỏi danh sách.
+        Bạn có thể kích hoạt lại sau nếu cần.
+    </p>
     <div class="ing-modal__actions">
         <button class="btn btn-secondary" onclick="closeDeactivateModal()">Huỷ</button>
-        <form method="post" action="${pageContext.request.contextPath}/ingredient" id="deactivateForm" style="display:inline;">
+        <form method="post" action="${pageContext.request.contextPath}/ingredient"
+              id="deactivateForm" style="display:inline;">
             <input type="hidden" name="action" value="deactivate">
             <input type="hidden" name="ingredientId" id="modalIngredientId" value="">
             <button type="submit" class="btn btn-danger">Xác nhận ngừng dùng</button>
@@ -178,7 +185,7 @@
 .toast-close:hover { opacity: 1; }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-/* ── Modal overlay ──────────────────────────── */
+/* ── Modal ──────────────────────────────────── */
 .ing-modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.38);
     z-index: 8888; backdrop-filter: blur(2px);
@@ -202,11 +209,11 @@
 .btn-danger { background: #ee5253; color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13.5px; }
 .btn-danger:hover { background: #d93535; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes popIn  { from { transform: translate(-50%,-50%) scale(.92); opacity: 0; } to { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+@keyframes popIn  { from { transform: translate(-50%,-50%) scale(.92); opacity: 0; }
+                    to   { transform: translate(-50%,-50%) scale(1);   opacity: 1; } }
 </style>
 
 <script>
-/* ── Modal deactivate ───────────────────────── */
 function openDeactivateModal(id, name) {
     document.getElementById('modalIngredientId').value = id;
     document.getElementById('modalIngredientName').textContent = name;
@@ -220,8 +227,6 @@ function closeDeactivateModal() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeDeactivateModal();
 });
-
-/* ── Toast tự ẩn sau 4 giây ────────────────── */
 (function() {
     var t = document.getElementById('toastMsg');
     if (t) setTimeout(function() { t.style.display = 'none'; }, 4000);

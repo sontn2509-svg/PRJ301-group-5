@@ -736,3 +736,4 @@ FROM SystemLogs sl
 LEFT JOIN Users u ON sl.UserID = u.UserID
 ORDER BY sl.CreatedAt DESC;
 GO
+

@@ -1,7 +1,7 @@
 package com.mycompany.kindergartenkitchen.service;
 
+import com.mycompany.kindergartenkitchen.model.Dish;
 import com.mycompany.kindergartenkitchen.model.DishIngredient;
-import com.mycompany.kindergartenkitchen.model.DishOption;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -15,7 +15,7 @@ public interface DishIngredientService {
 
     List<DishIngredient> getByDishId(int dishId) throws SQLException;
 
-    List<DishOption> getAllActiveDishOptions() throws SQLException;
+    List<Dish> getAllActiveDishOptions() throws SQLException;
 
     DishIngredient getById(int dishIngredientId) throws SQLException;
 

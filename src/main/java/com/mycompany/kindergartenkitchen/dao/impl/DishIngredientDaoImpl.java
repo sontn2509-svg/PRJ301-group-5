@@ -3,7 +3,6 @@ package com.mycompany.kindergartenkitchen.dao.impl;
 import com.mycompany.kindergartenkitchen.dao.DBContext;
 import com.mycompany.kindergartenkitchen.dao.DishIngredientDao;
 import com.mycompany.kindergartenkitchen.model.DishIngredient;
-import com.mycompany.kindergartenkitchen.model.DishOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,9 +23,6 @@ public class DishIngredientDaoImpl implements DishIngredientDao {
             + "JOIN Dishes d ON di.DishID = d.DishID "
             + "JOIN Ingredients i ON di.IngredientID = i.IngredientID "
             + "ORDER BY d.DishName, i.IngredientName";
-
-    private static final String SQL_FIND_ALL_ACTIVE_DISH_OPTIONS
-            = "SELECT DishID, DishName FROM Dishes WHERE Status = 1 ORDER BY DishName";
 
     private static final String SQL_FIND_BY_DISH_ID
             = "SELECT di.DishIngredientID, di.DishID, di.IngredientID, di.QuantityPerStudent, "
@@ -68,23 +64,6 @@ public class DishIngredientDaoImpl implements DishIngredientDao {
             throw new SQLException("Lỗi DBContext: " + e.getMessage());
         }
         return dishIngredientList;
-    }
-
-    @Override
-    public List<DishOption> findAllActiveDishOptions() throws SQLException {
-        List<DishOption> dishOptionList = new ArrayList<>();
-        try (Connection connection = db.getConnection();
-                PreparedStatement statement = connection.prepareStatement(SQL_FIND_ALL_ACTIVE_DISH_OPTIONS);
-                ResultSet resultSet = statement.executeQuery()) {
-
-            while (resultSet.next()) {
-                dishOptionList.add(new DishOption(
-                        resultSet.getInt("DishID"), resultSet.getString("DishName")));
-            }
-        } catch (Exception e) {
-            throw new SQLException("Lỗi DBContext: " + e.getMessage());
-        }
-        return dishOptionList;
     }
 
     @Override

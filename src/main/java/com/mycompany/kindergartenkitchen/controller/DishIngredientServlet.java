@@ -1,7 +1,7 @@
 package com.mycompany.kindergartenkitchen.controller;
 
 import com.mycompany.kindergartenkitchen.model.DishIngredient;
-import com.mycompany.kindergartenkitchen.model.DishOption;
+import com.mycompany.kindergartenkitchen.model.Dish;
 import com.mycompany.kindergartenkitchen.model.Ingredient;
 import com.mycompany.kindergartenkitchen.service.DishIngredientService;
 import com.mycompany.kindergartenkitchen.service.IngredientService;
@@ -92,7 +92,7 @@ public class DishIngredientServlet extends HttpServlet {
     private void handleShowForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
 
-        List<DishOption> dishOptionList = dishIngredientService.getAllActiveDishOptions();
+        List<Dish> dishOptionList = dishIngredientService.getAllActiveDishOptions();
         List<Ingredient> ingredientList = ingredientService.getAllIngredient();
         request.setAttribute("dishOptionList", dishOptionList);
         request.setAttribute("ingredientList", ingredientList);

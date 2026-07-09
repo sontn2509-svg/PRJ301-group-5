@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%--
     views/common/sidebar.jsp
     ------------------------------------------------------------------
@@ -13,8 +14,17 @@
     Tạm thời dùng giá trị mặc định nếu chưa có để demo độc lập được.
 --%>
 <%
-    String role = (String) session.getAttribute("role");
-    if (role == null) role = "KITCHEN_STAFF"; // mặc định demo cho module bếp
+    com.mycompany.kindergartenkitchen.entity.User authUser =
+        (com.mycompany.kindergartenkitchen.entity.User) session.getAttribute("authUser");
+String roleRaw = (authUser != null && authUser.getRoleName() != null) ? authUser.getRoleName() : "KitchenStaff";
+String role;
+switch (roleRaw) {
+    case "Admin":   role = "ADMIN";   break;
+    case "Manager": role = "MANAGER"; break;
+    case "Teacher": role = "TEACHER"; break;
+    case "Parent":  role = "PARENT";  break;
+    default: role = "KITCHEN_STAFF";
+}
     String currentPath = request.getRequestURI();
 %>
 <aside class="app-sidebar" id="appSidebar">
@@ -29,7 +39,17 @@
     <nav>
         <div class="app-sidebar__group">
             <div class="app-sidebar__group-label">Tổng quan</div>
-            <a class="app-sidebar__link" href="${pageContext.request.contextPath}/dashboard">
+            <%
+                String dashUrl;
+                switch (role) {
+                    case "ADMIN":   dashUrl = "/admin/dashboard";   break;
+                    case "MANAGER": dashUrl = "/manager/dashboard"; break;
+                    case "TEACHER": dashUrl = "/teacher/dashboard"; break;
+                    case "PARENT":  dashUrl = "/parent/dashboard";  break;
+                    default:        dashUrl = "/kitchen/dashboard";
+                }
+            %>
+            <a class="app-sidebar__link" href="${pageContext.request.contextPath}<%= dashUrl %>">
                 <span class="app-sidebar__link-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>
                 </span>
@@ -40,22 +60,28 @@
         <% if ("ADMIN".equals(role) || "MANAGER".equals(role)) { %>
         <div class="app-sidebar__group">
             <div class="app-sidebar__group-label">Hệ thống &amp; Thực đơn</div>
-            <a class="app-sidebar__link" href="${pageContext.request.contextPath}/user">
+<!--            <a class="app-sidebar__link" href="${pageContext.request.contextPath}/user">
                 <span class="app-sidebar__link-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
                 </span>
                 Người dùng
-            </a>
-            <a class="app-sidebar__link" href="${pageContext.request.contextPath}/menu">
+            </a>-->
+            <a class="app-sidebar__link ${currentPath.contains('/menu') ? 'is-active' : ''}" href="${pageContext.request.contextPath}/menu">
                 <span class="app-sidebar__link-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
                 </span>
                 Thực đơn
             </a>
+            <a class="app-sidebar__link ${currentPath.contains('/dish/') ? 'is-active' : ''}" href="${pageContext.request.contextPath}/dish/list">
+                <span class="app-sidebar__link-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2-3-2Z"/></svg>
+                </span>
+                Món ăn
+            </a>
         </div>
         <% } %>
 
-        <% if ("TEACHER".equals(role) || "ADMIN".equals(role) || "MANAGER".equals(role)) { %>
+        <% if ("TEACHER".equals(role) || "ADMIN".equals(role)) { %>
         <div class="app-sidebar__group">
             <div class="app-sidebar__group-label">Học sinh &amp; Điểm danh</div>
             <a class="app-sidebar__link" href="${pageContext.request.contextPath}/student">
@@ -76,6 +102,13 @@
         <% if ("PARENT".equals(role)) { %>
         <div class="app-sidebar__group">
             <div class="app-sidebar__group-label">Minh bạch bữa ăn</div>
+            <a class="app-sidebar__link ${currentPath.contains('/parent/menu') ? 'is-active' : ''}"
+               href="${pageContext.request.contextPath}/parent/menu">
+                <span class="app-sidebar__link-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+                </span>
+                Thực đơn của con
+            </a>
             <a class="app-sidebar__link ${currentPath.contains('/transparency') ? 'is-active' : ''}"
                href="${pageContext.request.contextPath}/ingredient-import/transparency">
                 <span class="app-sidebar__link-icon">
@@ -132,6 +165,6 @@
     </nav>
 
     <div class="app-sidebar__footer">
-        GitHub Flow · 4 thành viên<br>NetBeans 17 · Tomcat 10.5
+        WE ARE 1
     </div>
 </aside>

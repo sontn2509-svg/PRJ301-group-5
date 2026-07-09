@@ -65,12 +65,13 @@ public class IngredientImportServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession();
-        Integer currentUserId = (Integer) session.getAttribute("userId");
-        if (currentUserId == null) {
-            response.sendRedirect(request.getContextPath() + "/auth/login");
+        com.mycompany.kindergartenkitchen.entity.User authUser
+                = (com.mycompany.kindergartenkitchen.entity.User) request.getSession().getAttribute("authUser");
+        if (authUser == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
+        Integer currentUserId = authUser.getUserId();
 
         int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
         double quantity = parseDoubleOrZero(request.getParameter("quantity"));
@@ -95,9 +96,9 @@ public class IngredientImportServlet extends HttpServlet {
     }
 
     /**
-     * Trang Phụ huynh: xem minh bạch nguyên liệu nhập kho trong tuần
-     * (nhà cung cấp, chi phí, số lượng). Mặc định hiển thị tuần hiện tại
-     * (Thứ 2 - Chủ nhật); có thể xem tuần khác qua tham số fromDate.
+     * Trang Phụ huynh: xem minh bạch nguyên liệu nhập kho trong tuần (nhà cung
+     * cấp, chi phí, số lượng). Mặc định hiển thị tuần hiện tại (Thứ 2 - Chủ
+     * nhật); có thể xem tuần khác qua tham số fromDate.
      */
     private void handleTransparency(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {

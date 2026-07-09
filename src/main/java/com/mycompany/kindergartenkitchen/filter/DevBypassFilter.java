@@ -35,14 +35,14 @@ public class DevBypassFilter implements Filter {
 
     // ══════════════════════════════════════════════
     // ĐỔI DÒNG NÀY ĐỂ BẬT / TẮT BYPASS
-    private static final boolean BYPASS_ENABLED = true;
+    private static final boolean BYPASS_ENABLED = false;
     // ══════════════════════════════════════════════
 
     /* Thông tin user giả — khớp với cấu trúc session mà P1 dùng */
-    private static final int FAKE_USER_ID = 2;
+    private static final int FAKE_USER_ID = 1;
     private static final String FAKE_USERNAME = "dev_p4_test";
     private static final String FAKE_FULL_NAME = "P4 Test User";
-    private static final String FAKE_ROLE = "MANAGER"; // đổi tuỳ trang cần test
+    private static final String FAKE_ROLE = "admin"; // đổi tuỳ trang cần test
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -71,12 +71,12 @@ public class DevBypassFilter implements Filter {
         session.setAttribute("role", FAKE_ROLE);
 
         /* 2. LOGIC KIỂM TRA QUYỀN GIẢ LẬP: Nếu phát hiện role là Parent -> Chặn đứng luôn */
-//        if ("Parent".equals(FAKE_ROLE)) {
-//            // Trả về lỗi 403 Forbidden để xem giao diện trình duyệt báo lỗi thế nào
-//            httpResponse.sendError(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN,
-//                    "Lỗi phân quyền: Phụ huynh không được phép vào trang quản lý kho bếp!");
-//            return; // Dừng lại ở đây, không cho đi tiếp vào Servlet/JSP của bạn nữa
-//        }
+        if ("Parent".equals(FAKE_ROLE)) {
+            // Trả về lỗi 403 Forbidden để xem giao diện trình duyệt báo lỗi thế nào
+            httpResponse.sendError(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN,
+                    "Lỗi phân quyền: Phụ huynh không được phép vào trang quản lý kho bếp!");
+            return; // Dừng lại ở đây, không cho đi tiếp vào Servlet/JSP của bạn nữa
+        }
 
         // Nếu là KitchenStaff hoặc Manager -> Cho phép đi tiếp bình thường
         chain.doFilter(request, response);

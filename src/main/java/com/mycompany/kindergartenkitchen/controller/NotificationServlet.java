@@ -28,12 +28,13 @@ public class NotificationServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession();
-        Integer currentUserId = (Integer) session.getAttribute("userId");
-        if (currentUserId == null) {
-            response.sendRedirect(request.getContextPath() + "/auth/login");
+        com.mycompany.kindergartenkitchen.entity.User authUser
+                = (com.mycompany.kindergartenkitchen.entity.User) request.getSession().getAttribute("authUser");
+        if (authUser == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
+        Integer currentUserId = authUser.getUserId();
 
         try {
             List<UserNotification> notificationList

@@ -21,7 +21,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * Controller (Servlet) ghi nhận nguyên liệu đã dùng mỗi ngày (dành cho nhân viên bếp).
+ * Controller (Servlet) ghi nhận nguyên liệu đã dùng mỗi ngày (dành cho nhân
+ * viên bếp).
  */
 @WebServlet(name = "IngredientUsageServlet", urlPatterns = {"/ingredient-usage/*"})
 public class IngredientUsageServlet extends HttpServlet {
@@ -61,12 +62,13 @@ public class IngredientUsageServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        HttpSession session = request.getSession();
-        Integer currentUserId = (Integer) session.getAttribute("userId");
-        if (currentUserId == null) {
-            response.sendRedirect(request.getContextPath() + "/auth/login");
+        com.mycompany.kindergartenkitchen.entity.User authUser
+                = (com.mycompany.kindergartenkitchen.entity.User) request.getSession().getAttribute("authUser");
+        if (authUser == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
+        Integer currentUserId = authUser.getUserId();
 
         int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
         double quantityUsed = parseDoubleOrZero(request.getParameter("quantityUsed"));
