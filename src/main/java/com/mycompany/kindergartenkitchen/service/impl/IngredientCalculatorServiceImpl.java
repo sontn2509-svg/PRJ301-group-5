@@ -160,10 +160,15 @@ public class IngredientCalculatorServiceImpl implements IngredientCalculatorServ
     }
 
     private int countStudentForDate(Connection connection, Date attendanceDate) throws SQLException {
+        // Đồng bộ với AttendanceDAO.getAttendanceSummaryByDate: suất ăn cần
+        // chuẩn bị = tổng học sinh TRỪ những em đã báo nghỉ ăn HỢP LỆ (báo
+        // sớm, không bị tính tiền). Học sinh vắng nhưng báo trễ (vẫn bị tính
+        // tiền) vẫn phải tính suất vì bếp đã lỡ chuẩn bị.
         String sql = "SELECT COUNT(*) AS StudentCount FROM Students s "
-                + "WHERE s.StudentID NOT IN ("
+                + "WHERE s.Status = 1 "
+                + "AND s.StudentID NOT IN ("
                 + "    SELECT a.StudentID FROM Attendance a "
-                + "    WHERE a.AttendanceDate = ? AND a.Status = 'Absent'"
+                + "    WHERE a.AttendanceDate = ? AND a.Status = 'Absent' AND a.IsCharged = 0"
                 + ")";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -175,5 +180,28 @@ public class IngredientCalculatorServiceImpl implements IngredientCalculatorServ
             }
         }
         return 0;
+    }
+
+    @Override
+    public java.util.List<com.mycompany.kindergartenkitchen.model.IngredientShortageRow> getShortageDetails(Date menuDate)
+            throws SQLException {
+
+        Map<Integer, Double> neededByIngredientId = getNeededByIngredientId(menuDate);
+
+        java.util.List<com.mycompany.kindergartenkitchen.model.IngredientShortageRow> rows = new java.util.ArrayList<>();
+        for (Map.Entry<Integer, Double> entry : neededByIngredientId.entrySet()) {
+            Ingredient ingredient = ingredientDao.findById(entry.getKey());
+            if (ingredient != null) {
+                double needed = entry.getValue();
+                double stock = ingredient.getQuantityInStock();
+                double shortage = needed - stock;
+                rows.add(new com.mycompany.kindergartenkitchen.model.IngredientShortageRow(
+                        ingredient.getIngredientId(), ingredient.getIngredientName(), ingredient.getUnit(),
+                        stock, needed, shortage));
+            }
+        }
+
+        rows.sort((a, b) -> Double.compare(b.getShortage(), a.getShortage()));
+        return rows;
     }
 }

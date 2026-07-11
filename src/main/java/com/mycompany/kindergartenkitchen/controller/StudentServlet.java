@@ -21,7 +21,7 @@ import java.util.List;
  *
  * action (POST): add – lưu mới edit – cập nhật delete – xóa mềm
  */
-@WebServlet(name = "StudentServlet", urlPatterns = {"/students"})
+@WebServlet(name = "StudentServlet", urlPatterns = {"/manager/students"})
 public class StudentServlet extends HttpServlet {
 
     private final StudentDAO studentDAO = new StudentDAO();
@@ -35,9 +35,14 @@ public class StudentServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        com.mycompany.kindergartenkitchen.entity.User currentUser
+                = com.mycompany.kindergartenkitchen.util.ServletUtils.currentUser(request);
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        if (!"Manager".equalsIgnoreCase(currentUser.getRoleName())) {
+            response.sendRedirect(request.getContextPath() + "/");
             return;
         }
 
@@ -48,20 +53,20 @@ public class StudentServlet extends HttpServlet {
             request.setAttribute("parents", studentDAO.getActiveParents());
 
             // Đã sửa đường dẫn ở đây: thêm thư mục "student/"
-            request.getRequestDispatcher("/views/student/student-form.jsp").forward(request, response);
+            request.getRequestDispatcher("/jsp/student/student-form.jsp").forward(request, response);
             return;
         }
 
         if ("edit".equals(action)) {
             String studentIDRaw = request.getParameter("studentID");
             if (studentIDRaw == null || studentIDRaw.trim().isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/students");
+                response.sendRedirect(request.getContextPath() + "/manager/students");
                 return;
             }
             int studentID = Integer.parseInt(studentIDRaw);
             Student student = studentDAO.getStudentById(studentID);
             if (student == null) {
-                response.sendRedirect(request.getContextPath() + "/students?message=notFound");
+                response.sendRedirect(request.getContextPath() + "/manager/students?message=notFound");
                 return;
             }
             request.setAttribute("student", student);
@@ -69,7 +74,7 @@ public class StudentServlet extends HttpServlet {
             request.setAttribute("parents", studentDAO.getActiveParents());
 
             // Đã sửa đường dẫn ở đây: thêm thư mục "student/"
-            request.getRequestDispatcher("/views/student/student-form.jsp").forward(request, response);
+            request.getRequestDispatcher("/jsp/student/student-form.jsp").forward(request, response);
             return;
         }
 
@@ -110,7 +115,7 @@ public class StudentServlet extends HttpServlet {
         }
 
         // Đã sửa đường dẫn ở đây: thêm thư mục "student/"
-        request.getRequestDispatcher("/views/student/student-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/student/student-list.jsp").forward(request, response);
     }
 
     // ─── POST ────────────────────────────────────────────────────────────────
@@ -121,9 +126,14 @@ public class StudentServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        com.mycompany.kindergartenkitchen.entity.User currentUser
+                = com.mycompany.kindergartenkitchen.util.ServletUtils.currentUser(request);
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        if (!"Manager".equalsIgnoreCase(currentUser.getRoleName())) {
+            response.sendRedirect(request.getContextPath() + "/");
             return;
         }
 
@@ -134,10 +144,10 @@ public class StudentServlet extends HttpServlet {
                 int studentID = Integer.parseInt(request.getParameter("studentID"));
                 boolean ok = studentDAO.deleteStudent(studentID);
                 response.sendRedirect(request.getContextPath()
-                        + "/students?message=" + (ok ? "deleteSuccess" : "error"));
+                        + "/manager/students?message=" + (ok ? "deleteSuccess" : "error"));
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendRedirect(request.getContextPath() + "/students?message=error");
+                response.sendRedirect(request.getContextPath() + "/manager/students?message=error");
             }
             return;
         }
@@ -146,15 +156,15 @@ public class StudentServlet extends HttpServlet {
             try {
                 Student s = buildStudentFromRequest(request, 0);
                 if (s == null) {
-                    response.sendRedirect(request.getContextPath() + "/students?action=add&message=error");
+                    response.sendRedirect(request.getContextPath() + "/manager/students?action=add&message=error");
                     return;
                 }
                 boolean ok = studentDAO.insertStudent(s);
                 response.sendRedirect(request.getContextPath()
-                        + "/students?message=" + (ok ? "addSuccess" : "error"));
+                        + "/manager/students?message=" + (ok ? "addSuccess" : "error"));
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendRedirect(request.getContextPath() + "/students?message=error");
+                response.sendRedirect(request.getContextPath() + "/manager/students?message=error");
             }
             return;
         }
@@ -165,20 +175,20 @@ public class StudentServlet extends HttpServlet {
                 Student s = buildStudentFromRequest(request, studentID);
                 if (s == null) {
                     response.sendRedirect(request.getContextPath()
-                            + "/students?action=edit&studentID=" + studentID + "&message=error");
+                            + "/manager/students?action=edit&studentID=" + studentID + "&message=error");
                     return;
                 }
                 boolean ok = studentDAO.updateStudent(s);
                 response.sendRedirect(request.getContextPath()
-                        + "/students?message=" + (ok ? "editSuccess" : "error"));
+                        + "/manager/students?message=" + (ok ? "editSuccess" : "error"));
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendRedirect(request.getContextPath() + "/students?message=error");
+                response.sendRedirect(request.getContextPath() + "/manager/students?message=error");
             }
             return;
         }
 
-        response.sendRedirect(request.getContextPath() + "/students");
+        response.sendRedirect(request.getContextPath() + "/manager/students");
     }
 
     // ─── Helper ──────────────────────────────────────────────────────────────

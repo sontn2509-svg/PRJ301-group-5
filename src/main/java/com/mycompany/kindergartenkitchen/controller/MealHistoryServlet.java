@@ -31,13 +31,14 @@ public class MealHistoryServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         HttpSession session = request.getSession(false);
-
-        if (session == null || session.getAttribute("userId") == null) {
+        com.mycompany.kindergartenkitchen.entity.User currentUser
+                = com.mycompany.kindergartenkitchen.util.ServletUtils.currentUser(request);
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        int parentID = (int) session.getAttribute("userId");
+        int parentID = currentUser.getUserId();   // hoặc teacherID = currentUser.getUserId();
 
         LocalDate today = LocalDate.now();
         int year = today.getYear();
@@ -59,6 +60,6 @@ public class MealHistoryServlet extends HttpServlet {
         request.setAttribute("mealHistoryList", attendanceDAO.getMealHistoryByParent(parentID, year, month));
 
         // Đã sửa đường dẫn: trỏ vào thư mục "parent/"
-        request.getRequestDispatcher("/views/parent/meal-history.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/parent/meal-history.jsp").forward(request, response);
     }
 }

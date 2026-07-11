@@ -56,23 +56,24 @@
                     <div class="panel-header"><div class="panel-title"><span class="icon"><i class="fas fa-history"></i></span>Lịch sử yêu cầu</div></div>
                     <div class="panel-body" style="padding: 0;">
                         <table>
-                            <thead><tr><th>Con</th><th>Ngày</th><th>Lý do</th><th>Trạng thái</th></tr></thead>
+                            <thead><tr><th>Con</th><th>Ngày</th><th>Ghi chú</th><th>Tính tiền ăn</th><th>Trạng thái</th></tr></thead>
                             <tbody>
                                 <c:forEach var="a" items="${absences}">
                                     <tr>
                                         <td><strong>${a.studentName}</strong></td>
-                                        <td>${a.date}</td>
-                                        <td>${a.reason}</td>
+                                        <td>${a.attendanceDate}</td>
+                                        <td>${not empty a.note ? a.note : '—'}</td>
+                                        <td>${a.chargedText}</td>
                                         <td>
                                             <c:choose>
-                                                <c:when test="${a.status == 'pending'}"><span class="badge badge-warning">Chờ duyệt</span></c:when>
-                                                <c:when test="${a.status == 'approved'}"><span class="badge badge-success">Đồng ý</span></c:when>
-                                                <c:otherwise><span class="badge badge-danger">Từ chối</span></c:otherwise>
+                                                <c:when test="${a.notificationStatus == 'Pending'}"><span class="badge badge-warning">Chờ GV xác nhận</span></c:when>
+                                                <c:when test="${a.notificationStatus == 'Confirmed'}"><span class="badge badge-success">Đã xác nhận</span></c:when>
+                                                <c:otherwise><span class="badge">${a.notificationStatus}</span></c:otherwise>
                                             </c:choose>
                                         </td>
                                     </tr>
                                 </c:forEach>
-                                <c:if test="${empty absences}"><tr><td colspan="4" style="text-align: center; padding: 32px; color: #94a3b8;">Chưa có yêu cầu nào.</td></tr></c:if>
+                                <c:if test="${empty absences}"><tr><td colspan="5" style="text-align: center; padding: 32px; color: #94a3b8;">Chưa có yêu cầu nào.</td></tr></c:if>
                             </tbody>
                         </table>
                     </div>

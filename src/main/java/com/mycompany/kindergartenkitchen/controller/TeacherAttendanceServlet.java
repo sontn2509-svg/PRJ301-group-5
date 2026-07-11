@@ -2,13 +2,14 @@ package com.mycompany.kindergartenkitchen.controller;
 
 import com.mycompany.kindergartenkitchen.dao.AttendanceDAO;
 import com.mycompany.kindergartenkitchen.dao.ClassDAO;
+import com.mycompany.kindergartenkitchen.entity.User;
 import com.mycompany.kindergartenkitchen.model.ClassInfo;
+import com.mycompany.kindergartenkitchen.util.ServletUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -27,14 +28,19 @@ public class TeacherAttendanceServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
+        User currentUser = ServletUtils.currentUser(request);
 
-        if (session == null || session.getAttribute("userId") == null) {
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        int teacherID = (int) session.getAttribute("userId");
+        if (!"Teacher".equalsIgnoreCase(currentUser.getRoleName())) {
+            response.sendRedirect(request.getContextPath() + "/");
+            return;
+        }
+
+        int teacherID = currentUser.getUserId();
 
         List<ClassInfo> classes = classDAO.getClassesByTeacher(teacherID);
 
@@ -84,8 +90,8 @@ public class TeacherAttendanceServlet extends HttpServlet {
             }
         }
 
-        // Đã sửa đường dẫn ở đây: thêm thư mục "teacher/"
-        request.getRequestDispatcher("/views/teacher/teacher-attendance.jsp").forward(request, response);
+        // Trang điểm danh giáo viên - style thống nhất toàn hệ thống
+        request.getRequestDispatcher("/jsp/teacher/attendance.jsp").forward(request, response);
     }
 
     @Override
@@ -95,14 +101,19 @@ public class TeacherAttendanceServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
+        User currentUser = ServletUtils.currentUser(request);
 
-        if (session == null || session.getAttribute("userId") == null) {
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        int teacherID = (int) session.getAttribute("userId");
+        if (!"Teacher".equalsIgnoreCase(currentUser.getRoleName())) {
+            response.sendRedirect(request.getContextPath() + "/");
+            return;
+        }
+
+        int teacherID = currentUser.getUserId();
 
         String action = request.getParameter("action");
         String classIDRaw = request.getParameter("classID");
@@ -114,8 +125,16 @@ public class TeacherAttendanceServlet extends HttpServlet {
 
             if ("confirm".equals(action)) {
                 int attendanceID = Integer.parseInt(request.getParameter("attendanceID"));
+                String returnTo = request.getParameter("returnTo");
+                boolean backToAbsences = "absences".equals(returnTo);
 
                 boolean success = attendanceDAO.confirmAbsence(attendanceID, teacherID);
+
+                if (backToAbsences) {
+                    response.sendRedirect(request.getContextPath()
+                            + "/teacher/absences?message=" + (success ? "confirmSuccess" : "error"));
+                    return;
+                }
 
                 if (success) {
                     response.sendRedirect(request.getContextPath()

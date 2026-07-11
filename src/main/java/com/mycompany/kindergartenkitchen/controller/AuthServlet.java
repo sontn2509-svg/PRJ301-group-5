@@ -38,11 +38,16 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         String path = request.getServletPath();
         switch (path) {
-            case "/","" -> showHome(request, response);
-            case "/login" -> showLogin(request, response);
-            case "/logout" -> logout(request, response);
-            case "/forgot-password" -> showForgotPassword(request, response);
-            default -> response.sendRedirect(request.getContextPath() + "/");
+            case "/", "" ->
+                showHome(request, response);
+            case "/login" ->
+                showLogin(request, response);
+            case "/logout" ->
+                logout(request, response);
+            case "/forgot-password" ->
+                showForgotPassword(request, response);
+            default ->
+                response.sendRedirect(request.getContextPath() + "/");
         }
     }
 
@@ -83,6 +88,8 @@ public class AuthServlet extends HttpServlet {
         String path = request.getServletPath();
         if ("/forgot-password".equals(path)) {
             handleForgotPassword(request, response);
+        } else if ("/logout".equals(path)) {
+            logout(request, response);
         } else {
             login(request, response);
         }
@@ -120,7 +127,7 @@ public class AuthServlet extends HttpServlet {
             }
 
             User user = authenticated.get();
-            
+
             request.getSession(true).setAttribute("authUser", user);
             systemLogDAO.create(user.getUserId(), "LOGIN", "Users", user.getUserId(),
                     "Nguoi dung " + user.getUsername() + " dang nhap he thong");
@@ -322,12 +329,8 @@ public class AuthServlet extends HttpServlet {
         String prefix = phone.substring(1, 3);
         boolean validPrefix = false;
         switch (prefix) {
-            case "32","33","34","35","36","37","38","39",
-                 "52","53","54","55","56","57","58","59",
-                 "70","71","72","76","77","78","79",
-                 "81","82","83","84","85","86","87","88","89",
-                 "90","91","92","93","94","95","96","97","98","99"
-                 -> validPrefix = true;
+            case "32", "33", "34", "35", "36", "37", "38", "39", "52", "53", "54", "55", "56", "57", "58", "59", "70", "71", "72", "76", "77", "78", "79", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99" ->
+                validPrefix = true;
         }
         if (!validPrefix) {
             return "So dien thoai co dau so khong hop le. Dau so phai thuoc: 03x, 05x, 07x, 08x, 09x.";

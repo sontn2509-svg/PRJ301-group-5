@@ -31,6 +31,33 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title"><span class="icon"><i class="fas fa-user-graduate"></i></span>Danh sách học sinh</div></div>
+                    <table>
+                        <thead>
+                            <tr><th>Học sinh</th><th>Ngày sinh</th><th>Giới tính</th><th>Phụ huynh</th></tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="s" items="${students}">
+                                <tr>
+                                    <td>
+                                        <div class="student-row">
+                                            <div class="student-avatar">${fn:substring(s.studentName,0,1)}</div>
+                                            <span class="student-name">${s.studentName}</span>
+                                        </div>
+                                    </td>
+                                    <td>${s.dateOfBirth}</td>
+                                    <td>${s.gender ? 'Nam' : 'Nữ'}</td>
+                                    <td><i class="fas fa-user" style="color:#94a3b8; margin-right:6px;"></i>${s.parentName}</td>
+                                </tr>
+                            </c:forEach>
+                            <c:if test="${empty students}">
+                                <tr><td colspan="4" style="text-align:center; padding:32px; color:#94a3b8;">Chưa có học sinh trong lớp.</td></tr>
+                            </c:if>
+                        </tbody>
+                    </table>
+                </div>
             </main>
         </div>
     </div>

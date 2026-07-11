@@ -26,6 +26,9 @@
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title"><span class="icon"><i class="fas fa-calendar"></i></span>Ngày: ${date}</div>
+                        <form method="get" action="${pageContext.request.contextPath}/manager/attendance" style="display:flex; gap:8px; align-items:center;">
+                            <input type="date" name="date" class="form-control" value="${date}" style="padding:8px 12px;" onchange="this.form.submit()">
+                        </form>
                     </div>
                     <table>
                         <thead>

@@ -23,3 +23,36 @@
 </div>
 </div>
 </header>
+
+<div id="confirmModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <p id="confirmModalText">Bạn có chắc muốn xoá?</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline" onclick="closeConfirmModal()">Huỷ</button>
+      <button type="button" class="btn" style="background:#ef4444;color:#fff;" id="confirmModalOkBtn">Xoá</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let __pendingDeleteForm = null;
+
+function confirmDelete(formElement, message) {
+    __pendingDeleteForm = formElement;
+    document.getElementById('confirmModalText').textContent = message || 'Bạn có chắc muốn xoá?';
+    document.getElementById('confirmModal').style.display = 'flex';
+    return false;
+}
+
+function closeConfirmModal() {
+    __pendingDeleteForm = null;
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+document.getElementById('confirmModalOkBtn').addEventListener('click', function () {
+    if (__pendingDeleteForm) {
+        __pendingDeleteForm.submit();
+    }
+    closeConfirmModal();
+});
+</script>

@@ -18,7 +18,7 @@ import java.io.IOException;
  * mới - edit (GET): Hiển thị form chỉnh sửa lớp (cần classID) - edit (POST):
  * Lưu thay đổi lớp - delete (POST): Xóa mềm lớp (Status = 0)
  */
-@WebServlet(name = "ClassServlet", urlPatterns = {"/classes"})
+@WebServlet(name = "ClassServlet", urlPatterns = {"/manager/classes"})
 public class ClassServlet extends HttpServlet {
 
     private final ClassDAO classDAO = new ClassDAO();
@@ -31,9 +31,14 @@ public class ClassServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        com.mycompany.kindergartenkitchen.entity.User currentUser
+                = com.mycompany.kindergartenkitchen.util.ServletUtils.currentUser(request);
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        if (!"Manager".equalsIgnoreCase(currentUser.getRoleName())) {
+            response.sendRedirect(request.getContextPath() + "/");
             return;
         }
 
@@ -45,7 +50,7 @@ public class ClassServlet extends HttpServlet {
             request.setAttribute("teachers", classDAO.getActiveTeachers());
 
             // Đã sửa đường dẫn ở đây: thêm thư mục "class/"
-            request.getRequestDispatcher("/views/class/class-form.jsp").forward(request, response);
+            request.getRequestDispatcher("/jsp/class/class-form.jsp").forward(request, response);
             return;
         }
 
@@ -53,14 +58,14 @@ public class ClassServlet extends HttpServlet {
             // Hiển thị form chỉnh sửa
             String classIDRaw = request.getParameter("classID");
             if (classIDRaw == null || classIDRaw.trim().isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/classes");
+                response.sendRedirect(request.getContextPath() + "/manager/classes");
                 return;
             }
             int classID = Integer.parseInt(classIDRaw);
             ClassInfo classInfo = classDAO.getClassById(classID);
 
             if (classInfo == null) {
-                response.sendRedirect(request.getContextPath() + "/classes?message=notFound");
+                response.sendRedirect(request.getContextPath() + "/manager/classes?message=notFound");
                 return;
             }
 
@@ -69,7 +74,7 @@ public class ClassServlet extends HttpServlet {
             request.setAttribute("teachers", classDAO.getActiveTeachers());
 
             // Đã sửa đường dẫn ở đây: thêm thư mục "class/"
-            request.getRequestDispatcher("/views/class/class-form.jsp").forward(request, response);
+            request.getRequestDispatcher("/jsp/class/class-form.jsp").forward(request, response);
             return;
         }
 
@@ -100,7 +105,7 @@ public class ClassServlet extends HttpServlet {
         }
 
         // Đã sửa đường dẫn ở đây: thêm thư mục "class/"
-        request.getRequestDispatcher("/views/class/class-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/class/class-list.jsp").forward(request, response);
     }
 
     // ─── POST ────────────────────────────────────────────────────────────────
@@ -111,9 +116,14 @@ public class ClassServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
+        com.mycompany.kindergartenkitchen.entity.User currentUser
+                = com.mycompany.kindergartenkitchen.util.ServletUtils.currentUser(request);
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        if (!"Manager".equalsIgnoreCase(currentUser.getRoleName())) {
+            response.sendRedirect(request.getContextPath() + "/");
             return;
         }
 
@@ -125,10 +135,10 @@ public class ClassServlet extends HttpServlet {
                 int classID = Integer.parseInt(request.getParameter("classID"));
                 boolean ok = classDAO.deleteClass(classID);
                 response.sendRedirect(request.getContextPath()
-                        + "/classes?message=" + (ok ? "deleteSuccess" : "error"));
+                        + "/manager/classes?message=" + (ok ? "deleteSuccess" : "error"));
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendRedirect(request.getContextPath() + "/classes?message=error");
+                response.sendRedirect(request.getContextPath() + "/manager/classes?message=error");
             }
             return;
         }
@@ -144,7 +154,7 @@ public class ClassServlet extends HttpServlet {
                         : Integer.parseInt(teacherIDRaw);
 
                 if (className == null || className.trim().isEmpty()) {
-                    response.sendRedirect(request.getContextPath() + "/classes?action=add&message=error");
+                    response.sendRedirect(request.getContextPath() + "/manager/classes?action=add&message=error");
                     return;
                 }
 
@@ -155,10 +165,10 @@ public class ClassServlet extends HttpServlet {
 
                 boolean ok = classDAO.insertClass(classInfo);
                 response.sendRedirect(request.getContextPath()
-                        + "/classes?message=" + (ok ? "addSuccess" : "error"));
+                        + "/manager/classes?message=" + (ok ? "addSuccess" : "error"));
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendRedirect(request.getContextPath() + "/classes?message=error");
+                response.sendRedirect(request.getContextPath() + "/manager/classes?message=error");
             }
             return;
         }
@@ -176,7 +186,7 @@ public class ClassServlet extends HttpServlet {
 
                 if (className == null || className.trim().isEmpty()) {
                     response.sendRedirect(request.getContextPath()
-                            + "/classes?action=edit&classID=" + classID + "&message=error");
+                            + "/manager/classes?action=edit&classID=" + classID + "&message=error");
                     return;
                 }
 
@@ -188,15 +198,15 @@ public class ClassServlet extends HttpServlet {
 
                 boolean ok = classDAO.updateClass(classInfo);
                 response.sendRedirect(request.getContextPath()
-                        + "/classes?message=" + (ok ? "editSuccess" : "error"));
+                        + "/manager/classes?message=" + (ok ? "editSuccess" : "error"));
             } catch (Exception e) {
                 e.printStackTrace();
-                response.sendRedirect(request.getContextPath() + "/classes?message=error");
+                response.sendRedirect(request.getContextPath() + "/manager/classes?message=error");
             }
             return;
         }
 
         // Không khớp action nào
-        response.sendRedirect(request.getContextPath() + "/classes");
+        response.sendRedirect(request.getContextPath() + "/manager/classes");
     }
 }

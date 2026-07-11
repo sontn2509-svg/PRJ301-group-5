@@ -14,6 +14,8 @@ import java.util.List;
 import com.mycompany.kindergartenkitchen.model.MealHistory;
 import com.mycompany.kindergartenkitchen.model.MealCount;
 import com.mycompany.kindergartenkitchen.model.LevelMealCount;
+import com.mycompany.kindergartenkitchen.model.AttendanceClassSummary;
+import com.mycompany.kindergartenkitchen.model.AttendanceHistoryView;
 
 public class AttendanceDAO extends DBContext {
 
@@ -489,6 +491,180 @@ public class AttendanceDAO extends DBContext {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapAttendance(rs));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    /**
+     * Tổng hợp điểm danh theo TỪNG LỚP trong 1 ngày – dùng cho trang chuẩn
+     * manager/attendance.jsp: Tổng số học sinh, Có mặt, Nghỉ, Nghỉ ăn (nghỉ
+     * báo sớm nên không tính tiền ăn).
+     */
+    public List<AttendanceClassSummary> getAttendanceSummaryByDate(Date attendanceDate) {
+        List<AttendanceClassSummary> list = new ArrayList<>();
+
+        String sql = "SELECT c.ClassID, c.ClassName, "
+                + "COUNT(s.StudentID) AS Total, "
+                + "SUM(CASE WHEN a.Status = 'Present' THEN 1 ELSE 0 END) AS PresentCount, "
+                + "SUM(CASE WHEN a.Status = 'Absent' THEN 1 ELSE 0 END) AS AbsentCount, "
+                + "SUM(CASE WHEN a.Status = 'Absent' AND a.IsCharged = 0 THEN 1 ELSE 0 END) AS AbsentMealCount "
+                + "FROM Classes c "
+                + "JOIN Students s ON s.ClassID = c.ClassID AND s.Status = 1 "
+                + "LEFT JOIN Attendance a ON a.StudentID = s.StudentID AND a.AttendanceDate = ? "
+                + "WHERE c.Status = 1 "
+                + "GROUP BY c.ClassID, c.ClassName "
+                + "ORDER BY c.ClassName";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDate(1, attendanceDate);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new AttendanceClassSummary(
+                            rs.getInt("ClassID"),
+                            rs.getString("ClassName"),
+                            rs.getInt("Total"),
+                            rs.getInt("PresentCount"),
+                            rs.getInt("AbsentCount"),
+                            rs.getInt("AbsentMealCount")
+                    ));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    /**
+     * Lấy trạng thái điểm danh của 1 học sinh trong 1 ngày cụ thể (dùng cho
+     * trang parent/my-children.jsp, parent/dashboard.jsp). Trả về:
+     * "present" | "absent_meal" | "absent" | null (chưa điểm danh).
+     */
+    public String getStudentStatusOnDate(int studentID, Date attendanceDate) {
+        String sql = "SELECT Status, IsCharged FROM Attendance "
+                + "WHERE StudentID = ? AND AttendanceDate = ?";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, studentID);
+            ps.setDate(2, attendanceDate);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String status = rs.getString("Status");
+                    boolean isCharged = rs.getBoolean("IsCharged");
+                    if ("Present".equalsIgnoreCase(status)) {
+                        return "present";
+                    }
+                    if ("Absent".equalsIgnoreCase(status)) {
+                        return isCharged ? "absent" : "absent_meal";
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Danh sách các bản ghi vắng (Absent) đang chờ giáo viên xác nhận
+     * ("Pending") cho các lớp mà giáo viên này phụ trách – dùng cho trang
+     * teacher/absences.jsp.
+     */
+    public List<Attendance> getPendingAbsencesByTeacher(int teacherID) {
+        List<Attendance> list = new ArrayList<>();
+
+        String sql = "SELECT a.AttendanceID, a.StudentID, s.StudentCode, s.StudentName, "
+                + "c.ClassName, a.AttendanceDate, a.Status, "
+                + "ISNULL(a.ReportedBy, 0) AS ReportedBy, "
+                + "ISNULL(reporter.FullName, N'') AS ReportedByName, "
+                + "a.ReportedTime, a.IsCharged, "
+                + "ISNULL(a.ConfirmedBy, 0) AS ConfirmedBy, "
+                + "ISNULL(confirmer.FullName, N'') AS ConfirmedByName, "
+                + "a.ConfirmedTime, a.NotificationStatus, a.Note "
+                + "FROM Attendance a "
+                + "JOIN Students s ON a.StudentID = s.StudentID "
+                + "JOIN Classes c ON s.ClassID = c.ClassID "
+                + "LEFT JOIN Users reporter ON a.ReportedBy = reporter.UserID "
+                + "LEFT JOIN Users confirmer ON a.ConfirmedBy = confirmer.UserID "
+                + "WHERE c.TeacherID = ? "
+                + "AND a.Status = 'Absent' "
+                + "AND a.NotificationStatus = 'Pending' "
+                + "AND s.Status = 1 "
+                + "ORDER BY a.AttendanceDate DESC, s.StudentName";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, teacherID);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapAttendance(rs));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    /**
+     * Lịch sử điểm danh/ăn uống ĐẦY ĐỦ (cả có mặt lẫn vắng) của các con thuộc
+     * 1 phụ huynh, trong khoảng ngày [fromDate, toDate] – dùng cho trang
+     * parent/history.jsp.
+     */
+    public List<AttendanceHistoryView> getAttendanceHistoryFullByParent(int parentID, Date fromDate, Date toDate) {
+        List<AttendanceHistoryView> list = new ArrayList<>();
+
+        String sql = "SELECT a.AttendanceDate, s.StudentName, c.ClassName, a.Status, a.IsCharged, a.Note "
+                + "FROM Attendance a "
+                + "JOIN Students s ON a.StudentID = s.StudentID "
+                + "JOIN Classes c ON s.ClassID = c.ClassID "
+                + "WHERE s.ParentID = ? "
+                + "AND a.AttendanceDate BETWEEN ? AND ? "
+                + "ORDER BY a.AttendanceDate DESC, s.StudentName";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, parentID);
+            ps.setDate(2, fromDate);
+            ps.setDate(3, toDate);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String rawStatus = rs.getString("Status");
+                    boolean isCharged = rs.getBoolean("IsCharged");
+                    String status;
+                    if ("Present".equalsIgnoreCase(rawStatus)) {
+                        status = "present";
+                    } else if (isCharged) {
+                        status = "absent";
+                    } else {
+                        status = "absent_meal";
+                    }
+
+                    list.add(new AttendanceHistoryView(
+                            rs.getDate("AttendanceDate"),
+                            rs.getString("StudentName"),
+                            rs.getString("ClassName"),
+                            status,
+                            rs.getString("Note")
+                    ));
                 }
             }
 

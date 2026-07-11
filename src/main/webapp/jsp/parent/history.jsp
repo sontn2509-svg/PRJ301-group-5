@@ -23,7 +23,12 @@
                     </div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header"><div class="panel-title"><span class="icon"><i class="fas fa-clock-rotate-left"></i></span>Danh sách bữa ăn</div></div>
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icon"><i class="fas fa-clock-rotate-left"></i></span>Danh sách bữa ăn</div>
+                        <form method="get" action="${pageContext.request.contextPath}/parent/history" style="display:flex; gap:8px; align-items:center;">
+                            <input type="month" name="month" class="form-control" value="${selectedMonth}" style="padding:8px 12px;" onchange="this.form.submit()">
+                        </form>
+                    </div>
                     <div class="panel-body" style="padding: 0;">
                         <table>
                             <thead><tr><th>Ngày</th><th>Con</th><th>Lớp</th><th>Trạng thái</th></tr></thead>

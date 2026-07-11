@@ -33,12 +33,14 @@ public class ParentAbsenceServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("userId") == null) {
+        com.mycompany.kindergartenkitchen.entity.User currentUser
+                = com.mycompany.kindergartenkitchen.util.ServletUtils.currentUser(request);
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        int parentID = (int) session.getAttribute("userId");
+        int parentID = currentUser.getUserId();   // hoặc teacherID = currentUser.getUserId();
 
         request.setAttribute("children", studentDAO.getStudentsByParent(parentID));
         request.setAttribute("attendanceHistory", attendanceDAO.getAttendanceHistoryByParent(parentID));
@@ -65,7 +67,7 @@ public class ParentAbsenceServlet extends HttpServlet {
         }
 
         // Đã sửa đường dẫn: trỏ vào thư mục "parent/"
-        request.getRequestDispatcher("/views/parent/parent-absence.jsp").forward(request, response);
+        request.getRequestDispatcher("/jsp/parent/parent-absence.jsp").forward(request, response);
     }
 
     @Override
@@ -74,15 +76,16 @@ public class ParentAbsenceServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession(false);
+        com.mycompany.kindergartenkitchen.entity.User currentUser
+                = com.mycompany.kindergartenkitchen.util.ServletUtils.currentUser(request);
 
-        if (session == null || session.getAttribute("userId") == null) {
+        if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         try {
-            int parentID = (int) session.getAttribute("userId");
+            int parentID = currentUser.getUserId();
 
             String studentIDRaw = request.getParameter("studentID");
             String attendanceDateRaw = request.getParameter("attendanceDate");

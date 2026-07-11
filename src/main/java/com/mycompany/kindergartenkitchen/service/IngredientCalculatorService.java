@@ -40,4 +40,15 @@ public interface IngredientCalculatorService {
      *         nhận); âm = dùng nhiều hơn công thức (có thể hao hụt/lãng phí).
      */
     Map<String, Double> compareNeededVersusActualUsage(Date usageDate) throws SQLException;
+
+    /**
+     * Giống compareNeededVersusStock nhưng trả về DTO chi tiết (kèm đơn vị,
+     * tồn kho, số cần dùng) đã sắp xếp thiếu nhiều nhất lên đầu – dùng để
+     * hiển thị bảng cảnh báo nguyên liệu cho bếp (kitchen/ingredients.jsp,
+     * kitchen/dashboard.jsp).
+     *
+     * @param menuDate ngày cần kiểm tra
+     * @return danh sách chi tiết từng nguyên liệu
+     */
+    java.util.List<com.mycompany.kindergartenkitchen.model.IngredientShortageRow> getShortageDetails(Date menuDate) throws SQLException;
 }
