@@ -152,21 +152,14 @@ public class StudentDAO extends DBContext {
     }
 
     public boolean deleteStudent(int studentID) {
-        String deleteAttendance = "DELETE FROM Attendance WHERE StudentID = ?";
-        String deleteStudent = "DELETE FROM Students WHERE StudentID = ?";
+        // Chỉ cập nhật trạng thái Status = 0 (Xóa mềm)
+        String sql = "UPDATE Students SET Status = 0 WHERE StudentID = ?";
 
-        try (Connection conn = getConnection()) {
-            // Bước 1: Xóa hết lịch sử điểm danh của học sinh này (nếu có)
-            try (PreparedStatement ps1 = conn.prepareStatement(deleteAttendance)) {
-                ps1.setInt(1, studentID);
-                ps1.executeUpdate();
-            }
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Bước 2: Xóa học sinh khỏi bảng Students
-            try (PreparedStatement ps2 = conn.prepareStatement(deleteStudent)) {
-                ps2.setInt(1, studentID);
-                return ps2.executeUpdate() > 0;
-            }
+            ps.setInt(1, studentID);
+            return ps.executeUpdate() > 0;
+
         } catch (Exception e) {
             e.printStackTrace();
         }
