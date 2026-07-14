@@ -62,11 +62,11 @@
                                         <td><i class="fas fa-user" style="color: #94a3b8; margin-right: 6px;"></i>${cls.teacherName}</td>
                                         <td>
                                             <a href="${pageContext.request.contextPath}/manager/classes?action=edit&classID=${cls.classID}" class="btn btn-ghost btn-sm" title="Sửa"><i class="fas fa-pen"></i></a>
-                                            <form method="post" action="${pageContext.request.contextPath}/manager/students" style="display:inline;">
+                                            <form method="post" action="${pageContext.request.contextPath}/manager/classes" style="display:inline;">
                                                 <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="studentID" value="${s.studentID}">
+                                                <input type="hidden" name="classID" value="${cls.classID}">
                                                 <button type="button" class="btn btn-ghost btn-sm" title="Xoá"
-                                                        onclick="confirmDelete(this.form, 'Xoá học sinh \'${s.studentName}\'?')">
+                                                        onclick="confirmDelete(this.form, 'Xoá lớp học \'${cls.className}\'?')">
                                                     <i class="fas fa-trash" style="color:#ef4444;"></i>
                                                 </button>
                                             </form>

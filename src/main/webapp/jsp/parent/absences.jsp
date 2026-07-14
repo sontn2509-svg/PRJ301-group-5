@@ -19,7 +19,7 @@
                 <div class="page-header-card">
                     <div class="page-header-content">
                         <div class="page-header-icon"><i class="fas fa-user-slash"></i></div>
-                        <div><h1>Xin nghỉ ăn</h1><p>Gửi yêu cầu xin nghỉ ăn cho con</p></div>
+                        <div><h1>Xin nghỉ học</h1><p>Gửi yêu cầu báo nghỉ cho con</p></div>
                     </div>
                 </div>
                 <c:if test="${not empty flash}">
