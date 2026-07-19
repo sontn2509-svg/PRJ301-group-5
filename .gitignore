@@ -8,3 +8,5 @@ nbproject/
 *.jar
 Thumbs.db
 .DS_Store
+/KindergartenKitchen1/dist/
+/KindergartenKitchen1/build/
