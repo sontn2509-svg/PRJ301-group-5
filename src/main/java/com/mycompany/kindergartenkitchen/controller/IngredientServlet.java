@@ -14,8 +14,6 @@ import java.util.List;
 
 /**
  * Controller (Servlet) xử lý request cho Ingredient.
- * Chỉ làm nhiệm vụ: nhận request, parse param, gọi Service, forward JSP.
- * Không chứa logic nghiệp vụ.
  */
 @WebServlet(name = "IngredientServlet", urlPatterns = {"/ingredient/*"})
 public class IngredientServlet extends HttpServlet {
@@ -107,9 +105,8 @@ public class IngredientServlet extends HttpServlet {
 
         String ingredientName = request.getParameter("ingredientName");
         String unit = request.getParameter("unit");
-        double quantityInStock = parseDoubleOrZero(request.getParameter("quantityInStock"));
 
-        boolean success = ingredientService.createIngredient(ingredientName, unit, quantityInStock);
+        boolean success = ingredientService.createIngredient(ingredientName, unit);
         response.sendRedirect(request.getContextPath() + "/ingredient/list?success=" + success);
     }
 
@@ -119,9 +116,8 @@ public class IngredientServlet extends HttpServlet {
         int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
         String ingredientName = request.getParameter("ingredientName");
         String unit = request.getParameter("unit");
-        double quantityInStock = parseDoubleOrZero(request.getParameter("quantityInStock"));
 
-        boolean updated = ingredientService.updateIngredient(ingredientId, ingredientName, unit, quantityInStock);
+        boolean updated = ingredientService.updateIngredient(ingredientId, ingredientName, unit);
         response.sendRedirect(request.getContextPath() + "/ingredient/list?success=" + updated);
     }
 

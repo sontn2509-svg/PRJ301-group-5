@@ -42,6 +42,14 @@ public interface IngredientCalculatorService {
     Map<String, Double> compareNeededVersusActualUsage(Date usageDate) throws SQLException;
 
     /**
+     * Giống compareNeededVersusActualUsage nhưng trả về đầy đủ đơn vị tính và
+     * cả 2 số gốc (cần dùng, thực tế đã dùng) thay vì chỉ mỗi số chênh lệch —
+     * dùng cho trang Bếp "Sử dụng hôm nay" để người xem tự đối chiếu được.
+     */
+    java.util.List<com.mycompany.kindergartenkitchen.model.UsageComparisonRow>
+            getUsageComparisonDetails(Date usageDate) throws SQLException;
+
+    /**
      * Giống compareNeededVersusStock nhưng trả về DTO chi tiết (kèm đơn vị,
      * tồn kho, số cần dùng) đã sắp xếp thiếu nhiều nhất lên đầu – dùng để
      * hiển thị bảng cảnh báo nguyên liệu cho bếp (kitchen/ingredients.jsp,

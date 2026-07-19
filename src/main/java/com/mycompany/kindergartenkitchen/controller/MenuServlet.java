@@ -30,8 +30,8 @@ import java.util.List;
 
 /**
  * Controller (Servlet) quản lý thực đơn theo tuần (Menus) và chi tiết
- * ngày/bữa/món (MenuDetails). Manager tạo thực đơn cho 1 cấp học/1 tuần, sau
- * đó vào trang chi tiết để gắn món ăn vào từng ngày + từng bữa.
+ * ngày/bữa/món (MenuDetails). Manager tạo thực đơn cho 1 cấp học/1 tuần, sau đó
+ * vào trang chi tiết để gắn món ăn vào từng ngày + từng bữa.
  */
 @WebServlet(name = "MenuServlet", urlPatterns = {"/menu/*"})
 public class MenuServlet extends HttpServlet {
@@ -223,6 +223,11 @@ public class MenuServlet extends HttpServlet {
         int dishId = Integer.parseInt(request.getParameter("dishId"));
 
         boolean success = menuDetailService.addDish(menuId, menuDate, mealTypeId, dishId);
+
+        if (isAjaxRequest(request)) {
+            respondJson(response, success, menuId, dishId);
+            return;
+        }
         response.sendRedirect(request.getContextPath() + "/menu/detail?id=" + menuId + "&success=" + success);
     }
 
@@ -231,7 +236,46 @@ public class MenuServlet extends HttpServlet {
 
         int menuId = Integer.parseInt(request.getParameter("menuId"));
         int menuDetailId = Integer.parseInt(request.getParameter("menuDetailId"));
-        menuDetailService.removeDish(menuDetailId);
+        boolean success = menuDetailService.removeDish(menuDetailId);
+
+        if (isAjaxRequest(request)) {
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"success\":" + success + "}");
+            return;
+        }
         response.sendRedirect(request.getContextPath() + "/menu/detail?id=" + menuId);
+    }
+
+    private boolean isAjaxRequest(HttpServletRequest request) {
+        return "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+    }
+
+    private void respondJson(HttpServletResponse response, boolean success, int menuId, int dishId)
+            throws IOException, SQLException {
+
+        response.setContentType("application/json;charset=UTF-8");
+        if (!success) {
+            response.getWriter().write("{\"success\":false}");
+            return;
+        }
+
+        Dish dish = dishService.getById(dishId);
+        String dishName = dish != null ? dish.getDishName() : "";
+
+        int newMenuDetailId = -1;
+        for (var detail : menuDetailService.getByMenuId(menuId)) {
+            if (detail.getDishId() == dishId) {
+                newMenuDetailId = Math.max(newMenuDetailId, detail.getMenuDetailId());
+            }
+        }
+
+        String json = String.format(
+                "{\"success\":true,\"menuDetailId\":%d,\"dishName\":%s}",
+                newMenuDetailId, jsonString(dishName));
+        response.getWriter().write(json);
+    }
+
+    private String jsonString(String value) {
+        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 }

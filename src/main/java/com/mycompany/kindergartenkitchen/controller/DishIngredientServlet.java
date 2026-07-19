@@ -1,5 +1,6 @@
 package com.mycompany.kindergartenkitchen.controller;
 
+import com.mycompany.kindergartenkitchen.entity.User;
 import com.mycompany.kindergartenkitchen.model.DishIngredient;
 import com.mycompany.kindergartenkitchen.model.Dish;
 import com.mycompany.kindergartenkitchen.model.Ingredient;
@@ -7,6 +8,7 @@ import com.mycompany.kindergartenkitchen.service.DishIngredientService;
 import com.mycompany.kindergartenkitchen.service.IngredientService;
 import com.mycompany.kindergartenkitchen.service.impl.DishIngredientServiceImpl;
 import com.mycompany.kindergartenkitchen.service.impl.IngredientServiceImpl;
+import com.mycompany.kindergartenkitchen.util.ServletUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,9 +19,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * Controller (Servlet) quản lý công thức món ăn (DishIngredients):
- * món ăn nào cần những nguyên liệu gì, định lượng cho 1 học sinh.
- * Chỉ làm nhiệm vụ: nhận request, parse param, gọi Service, forward JSP.
+ * Controller (Servlet) quản lý công thức món ăn (DishIngredients): món ăn nào
+ * cần những nguyên liệu gì, định lượng cho 1 học sinh. Chỉ làm nhiệm vụ: nhận
+ * request, parse param, gọi Service, forward JSP.
  */
 @WebServlet(name = "DishIngredientServlet", urlPatterns = {"/dish-ingredient/*"})
 public class DishIngredientServlet extends HttpServlet {
@@ -57,6 +59,11 @@ public class DishIngredientServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        User currentUser = ServletUtils.currentUser(request);
+        if (currentUser == null || !"Manager".equalsIgnoreCase(currentUser.getRoleName())) {
+            response.sendRedirect(request.getContextPath() + "/dish-ingredient/list?success=false");
+            return;
+        }
 
         String action = request.getParameter("action");
         if (action == null) {

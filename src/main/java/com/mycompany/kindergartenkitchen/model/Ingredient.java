@@ -56,6 +56,14 @@ public class Ingredient {
         this.quantityInStock = quantityInStock;
     }
 
+    /**
+     * Chuỗi tồn kho thân thiện (tự đổi kg/lít nhỏ sang g/ml), dùng trong JSP
+     * thay vì fmt:formatNumber + unit thô.
+     */
+    public String getQuantityInStockDisplay() {
+        return com.mycompany.kindergartenkitchen.util.QuantityFormatter.format(quantityInStock, unit);
+    }
+
     public boolean isStatus() {
         return status;
     }

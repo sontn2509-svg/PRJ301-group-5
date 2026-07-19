@@ -112,8 +112,8 @@
                     </div>
 
                     <div class="stock-tag__qty">
-                        <span class="stock-tag__qty-num"><fmt:formatNumber value="${qty}" maxFractionDigits="2" /></span>
-                        <span class="stock-tag__qty-unit">${ing.unit} trong kho</span>
+                        <span class="stock-tag__qty-num">${ing.quantityInStockDisplay}</span>
+                        <span class="stock-tag__qty-unit">trong kho</span>
                     </div>
 
                     <div class="stock-meter">

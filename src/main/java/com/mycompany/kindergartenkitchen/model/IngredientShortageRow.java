@@ -79,4 +79,34 @@ public class IngredientShortageRow {
     public boolean isBelowStock() {
         return shortage > 0;
     }
+
+    public String getStockDisplay() {
+        return formatQuantity(stock, unit);
+    }
+
+    public String getNeededDisplay() {
+        return formatQuantity(needed, unit);
+    }
+
+    public String getShortageDisplay() {
+        return formatQuantity(Math.abs(shortage), unit);
+    }
+
+    private String formatQuantity(double value, String unit) {
+        if (unit == null) {
+            return String.format("%.2f", value);
+        }
+        String u = unit.trim().toLowerCase();
+        if (u.equals("kg") && value < 1) {
+            return Math.round(value * 1000) + " g";
+        }
+        if ((u.equals("lít") || u.equals("l")) && value < 1) {
+            return Math.round(value * 1000) + " ml";
+        }
+        
+        if (value == Math.floor(value)) {
+            return (long) value + " " + unit;
+        }
+        return String.format("%.2f %s", value, unit);
+    }
 }

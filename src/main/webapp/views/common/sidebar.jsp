@@ -3,15 +3,7 @@
 <%--
     views/common/sidebar.jsp
     ------------------------------------------------------------------
-    LAYOUT TẠM THỜI — chờ P1 (Auth/Admin/Hệ thống) bàn giao bản chính thức.
-    Đây là "hợp đồng" giao diện: nếu P1 nộp file cùng tên/cùng vị trí,
-    chỉ cần thay thế file này, các trang JSP của P4 KHÔNG cần sửa gì
-    (miễn giữ class .app-sidebar, .app-sidebar__link, .is-active).
-
-    Biến mong đợi có sẵn trong request/session khi P1 hoàn thiện:
-      session: userId (Integer), username (String), role (String)
-      role một trong: ADMIN, MANAGER, TEACHER, PARENT, KITCHEN_STAFF
-    Tạm thời dùng giá trị mặc định nếu chưa có để demo độc lập được.
+   
 --%>
 <%
     com.mycompany.kindergartenkitchen.entity.User authUser =
@@ -60,12 +52,6 @@ switch (roleRaw) {
         <% if ("ADMIN".equals(role) || "MANAGER".equals(role)) { %>
         <div class="app-sidebar__group">
             <div class="app-sidebar__group-label">Hệ thống &amp; Thực đơn</div>
-<!--            <a class="app-sidebar__link" href="${pageContext.request.contextPath}/user">
-                <span class="app-sidebar__link-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
-                </span>
-                Người dùng
-            </a>-->
             <a class="app-sidebar__link ${currentPath.contains('/menu') ? 'is-active' : ''}" href="${pageContext.request.contextPath}/menu">
                 <span class="app-sidebar__link-icon">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
@@ -128,7 +114,7 @@ switch (roleRaw) {
                 </span>
                 Nguyên liệu
             </a>
-            <% if ("ADMIN".equals(role) || "MANAGER".equals(role)) { %>
+            <% if ("ADMIN".equals(role) || "MANAGER".equals(role) || "KITCHEN_STAFF".equals(role)) { %>
             <a class="app-sidebar__link ${currentPath.contains('/dish-ingredient') ? 'is-active' : ''}"
                href="${pageContext.request.contextPath}/dish-ingredient/list">
                 <span class="app-sidebar__link-icon">

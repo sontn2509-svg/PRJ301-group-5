@@ -10,13 +10,15 @@ import java.util.List;
  */
 public interface IngredientUsageService {
 
-    List<IngredientUsage> getUsageByDate(Date usageDate) throws SQLException;
-
+   List<IngredientUsage> getUsageByDate(Date usageDate) throws SQLException;
+ 
     /**
      * Ghi nhận nguyên liệu đã dùng và trừ vào tồn kho.
      */
     boolean recordUsage(int ingredientId, double quantityUsed, Date usageDate,
             int updatedBy, String note);
+ 
+    boolean updateUsage(int usageId, double newQuantityUsed, String note);
 
-    boolean updateUsage(int usageId, double quantityUsed, String note);
+    boolean deleteUsage(int usageId);
 }

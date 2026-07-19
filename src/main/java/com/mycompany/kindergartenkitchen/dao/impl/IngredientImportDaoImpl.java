@@ -54,6 +54,15 @@ public class IngredientImportDaoImpl implements IngredientImportDao {
             + "(IngredientID, Quantity, UnitPrice, ImportDate, SupplierName, CreatedBy, Note) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
+    // Không update ImportDate/IngredientID/CreatedBy — chỉ sửa các trường
+    // Manager có thể gõ nhầm khi nhập tay (số lượng, đơn giá, nhà cung cấp, ghi chú).
+    // TotalPrice là computed column trong SQL Server (Quantity * UnitPrice) nên
+    // không được liệt kê ở đây — SQL Server tự tính lại.
+    private static final String SQL_UPDATE
+            = "UPDATE IngredientImports "
+            + "SET Quantity = ?, UnitPrice = ?, SupplierName = ?, Note = ? "
+            + "WHERE ImportID = ?";
+
     private static final String SQL_DELETE
             = "DELETE FROM IngredientImports WHERE ImportID = ?";
 
@@ -137,6 +146,22 @@ public class IngredientImportDaoImpl implements IngredientImportDao {
             throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return -1;
+    }
+
+    @Override
+    public boolean update(IngredientImport ingredientImport) throws SQLException {
+        try (Connection connection = db.getConnection();
+                PreparedStatement statement = connection.prepareStatement(SQL_UPDATE)) {
+
+            statement.setDouble(1, ingredientImport.getQuantity());
+            statement.setDouble(2, ingredientImport.getUnitPrice());
+            statement.setString(3, ingredientImport.getSupplierName());
+            statement.setString(4, ingredientImport.getNote());
+            statement.setInt(5, ingredientImport.getImportId());
+            return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
+        }
     }
 
     @Override

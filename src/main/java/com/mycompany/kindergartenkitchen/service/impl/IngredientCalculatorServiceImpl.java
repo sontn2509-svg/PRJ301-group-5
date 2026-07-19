@@ -72,6 +72,34 @@ public class IngredientCalculatorServiceImpl implements IngredientCalculatorServ
     }
 
     @Override
+    public java.util.List<com.mycompany.kindergartenkitchen.model.UsageComparisonRow>
+            getUsageComparisonDetails(Date usageDate) throws SQLException {
+
+        Map<Integer, Double> neededByIngredientId = getNeededByIngredientId(usageDate);
+        Map<Integer, Double> actualUsedByIngredientId = getActualUsedByIngredientId(usageDate);
+
+        Map<Integer, Double> allIngredientIds = new LinkedHashMap<>(neededByIngredientId);
+        for (Integer ingredientId : actualUsedByIngredientId.keySet()) {
+            allIngredientIds.putIfAbsent(ingredientId, 0.0);
+        }
+
+        java.util.List<com.mycompany.kindergartenkitchen.model.UsageComparisonRow> rows = new java.util.ArrayList<>();
+        for (Integer ingredientId : allIngredientIds.keySet()) {
+            double needed = neededByIngredientId.getOrDefault(ingredientId, 0.0);
+            double actualUsed = actualUsedByIngredientId.getOrDefault(ingredientId, 0.0);
+            Ingredient ingredient = ingredientDao.findById(ingredientId);
+            if (ingredient != null) {
+                rows.add(new com.mycompany.kindergartenkitchen.model.UsageComparisonRow(
+                        ingredient.getIngredientId(), ingredient.getIngredientName(), ingredient.getUnit(),
+                        needed, actualUsed, needed - actualUsed));
+            }
+        }
+
+        rows.sort((a, b) -> Double.compare(b.getDiff(), a.getDiff()));
+        return rows;
+    }
+
+    @Override
     public Map<String, Double> compareNeededVersusActualUsage(Date usageDate) throws SQLException {
 
         Map<Integer, Double> neededByIngredientId = getNeededByIngredientId(usageDate);
@@ -160,12 +188,22 @@ public class IngredientCalculatorServiceImpl implements IngredientCalculatorServ
     }
 
     private int countStudentForDate(Connection connection, Date attendanceDate) throws SQLException {
-        // Đồng bộ với AttendanceDAO.getAttendanceSummaryByDate: suất ăn cần
-        // chuẩn bị = tổng học sinh TRỪ những em đã báo nghỉ ăn HỢP LỆ (báo
-        // sớm, không bị tính tiền). Học sinh vắng nhưng báo trễ (vẫn bị tính
-        // tiền) vẫn phải tính suất vì bếp đã lỡ chuẩn bị.
+        // Đồng bộ với AttendanceDAO.getAttendanceSummaryByDate/getMealCountByDate:
+        // suất ăn cần chuẩn bị = tổng học sinh CỦA LỚP ĐANG HOẠT ĐỘNG, trừ những
+        // em đã báo nghỉ ăn HỢP LỆ (báo sớm, không bị tính tiền). Học sinh vắng
+        // nhưng báo trễ (vẫn bị tính tiền) vẫn phải tính suất vì bếp đã lỡ chuẩn bị.
+        //
+        // LƯU Ý: trước đây hàm này không lọc theo Classes.Status, khác với mọi
+        // hàm đếm suất ăn khác trong AttendanceDAO (đều có "AND c.Status = 1").
+        // Hậu quả: nếu 1 lớp bị vô hiệu hoá nhưng học sinh trong lớp đó vẫn còn
+        // Status = 1 (active), số suất ăn hiển thị cho bếp (MealCountService)
+        // sẽ ít hơn số nguyên liệu được tính là "cần dùng" ở đây — dẫn đến cảnh
+        // báo thiếu/thừa nguyên liệu sai lệch so với thực tế. Đã thêm JOIN
+        // Classes + lọc c.Status = 1 để khớp hoàn toàn với các hàm còn lại.
         String sql = "SELECT COUNT(*) AS StudentCount FROM Students s "
+                + "JOIN Classes c ON s.ClassID = c.ClassID "
                 + "WHERE s.Status = 1 "
+                + "AND c.Status = 1 "
                 + "AND s.StudentID NOT IN ("
                 + "    SELECT a.StudentID FROM Attendance a "
                 + "    WHERE a.AttendanceDate = ? AND a.Status = 'Absent' AND a.IsCharged = 0"

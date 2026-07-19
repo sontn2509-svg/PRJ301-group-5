@@ -73,18 +73,30 @@ public class IngredientImportServlet extends HttpServlet {
         }
         Integer currentUserId = authUser.getUserId();
 
-        int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
+        String action = request.getParameter("action");
         double quantity = parseDoubleOrZero(request.getParameter("quantity"));
         double unitPrice = parseDoubleOrZero(request.getParameter("unitPrice"));
         String supplierName = request.getParameter("supplierName");
         String note = request.getParameter("note");
-        Date importDate = Date.valueOf(java.time.LocalDate.now());
 
-        boolean success = ingredientImportService.createImport(
-                ingredientId, quantity, unitPrice, importDate, supplierName, currentUserId, note);
+        if ("update".equals(action)) {
+            int importId = Integer.parseInt(request.getParameter("importId"));
+            ingredientImportService.updateImport(importId, quantity, unitPrice, supplierName, note);
+            response.sendRedirect(request.getContextPath() + "/ingredient-import/list?updated=true");
+        } else if ("delete".equals(action)) {
+            int importId = Integer.parseInt(request.getParameter("importId"));
+            ingredientImportService.deleteImport(importId);
+            response.sendRedirect(request.getContextPath() + "/ingredient-import/list?deleted=true");
+        } else {
+            int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
+            Date importDate = Date.valueOf(java.time.LocalDate.now());
 
-        request.setAttribute("success", success);
-        response.sendRedirect(request.getContextPath() + "/ingredient-import/list");
+            boolean success = ingredientImportService.createImport(
+                    ingredientId, quantity, unitPrice, importDate, supplierName, currentUserId, note);
+
+            request.setAttribute("success", success);
+            response.sendRedirect(request.getContextPath() + "/ingredient-import/list");
+        }
     }
 
     private void handleList(HttpServletRequest request, HttpServletResponse response)

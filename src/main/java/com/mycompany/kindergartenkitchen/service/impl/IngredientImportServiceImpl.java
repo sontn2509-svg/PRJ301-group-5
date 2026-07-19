@@ -67,6 +67,78 @@ public class IngredientImportServiceImpl implements IngredientImportService {
     }
 
     @Override
+    public boolean updateImport(int importId, double newQuantity, double newUnitPrice,
+            String supplierName, String note) {
+
+        if (newQuantity <= 0 || newUnitPrice < 0) {
+            return false;
+        }
+
+        try {
+            // Lấy bản ghi cũ để tính chênh lệch tồn kho
+            IngredientImport old = ingredientImportDao.findById(importId);
+            if (old == null) {
+                return false;
+            }
+
+            // QUAN TRỌNG: phải đọc số lượng CŨ ra biến riêng TRƯỚC khi gọi
+            // setQuantity() — nếu không, old.getQuantity() ở dưới sẽ trả về
+            // số MỚI (vì cùng 1 object), khiến diff luôn = 0.
+            double oldQuantity = old.getQuantity();
+
+            // Cập nhật bản ghi
+            old.setQuantity(newQuantity);
+            old.setUnitPrice(newUnitPrice);
+            old.setSupplierName(supplierName);
+            old.setNote(note);
+            boolean updated = ingredientImportDao.update(old);
+            if (!updated) {
+                return false;
+            }
+
+            // Vá tồn kho: trừ số lượng cũ đã cộng trước đó, cộng lại số lượng mới
+            Ingredient ingredient = ingredientDao.findById(old.getIngredientId());
+            if (ingredient == null) {
+                return false;
+            }
+            double diff = newQuantity - oldQuantity;
+            double newStock = Math.max(0, ingredient.getQuantityInStock() + diff);
+            return ingredientDao.updateStock(old.getIngredientId(), newStock);
+
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteImport(int importId) {
+        try {
+            // Lấy bản ghi trước khi xoá để trừ ngược lại tồn kho
+            IngredientImport ingredientImport = ingredientImportDao.findById(importId);
+            if (ingredientImport == null) {
+                return false;
+            }
+
+            boolean deleted = ingredientImportDao.delete(importId);
+            if (!deleted) {
+                return false;
+            }
+
+            // Trừ ngược lại số lượng đã cộng vào tồn kho lúc tạo phiếu
+            Ingredient ingredient = ingredientDao.findById(ingredientImport.getIngredientId());
+            if (ingredient == null) {
+                return true; // đã xoá record, nguyên liệu bị mất thì bỏ qua
+            }
+            double newStock = Math.max(0,
+                    ingredient.getQuantityInStock() - ingredientImport.getQuantity());
+            return ingredientDao.updateStock(ingredientImport.getIngredientId(), newStock);
+
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    @Override
     public double getTotalCost(Date fromDate, Date toDate) throws SQLException {
         return ingredientImportDao.sumTotalCostByDateRange(fromDate, toDate);
     }

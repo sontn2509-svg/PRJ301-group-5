@@ -82,4 +82,22 @@ public class DishIngredient {
     public void setUnit(String unit) {
         this.unit = unit;
     }
+    
+    public String getQuantityDisplay() {
+        if (unit == null) {
+            return String.format("%.2f", quantityPerStudent);
+        }
+        String u = unit.trim().toLowerCase();
+        double value = quantityPerStudent;
+        if (u.equals("kg") && value < 1) {
+            return Math.round(value * 1000) + " g";
+        }
+        if ((u.equals("lít") || u.equals("l")) && value < 1) {
+            return Math.round(value * 1000) + " ml";
+        }
+        if (value == Math.floor(value)) {
+            return (long) value + " " + unit;
+        }
+        return String.format("%.2f %s", value, unit);
+    }
 }

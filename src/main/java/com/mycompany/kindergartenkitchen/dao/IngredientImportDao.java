@@ -19,6 +19,8 @@ public interface IngredientImportDao {
 
     int insert(IngredientImport ingredientImport) throws SQLException;
 
+    boolean update(IngredientImport ingredientImport) throws SQLException;
+
     boolean delete(int importId) throws SQLException;
 
     double sumTotalCostByDateRange(Date fromDate, Date toDate) throws SQLException;

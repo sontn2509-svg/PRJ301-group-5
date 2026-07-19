@@ -9,7 +9,7 @@
 <%
     boolean isEdit = (request.getAttribute("ingredient") != null);
     request.setAttribute("pageTitle", isEdit ? "Sửa nguyên liệu" : "Thêm nguyên liệu");
-    request.setAttribute("pageSub", "Khai báo tên, đơn vị tính và tồn kho ban đầu");
+    request.setAttribute("pageSub", "Khai báo tên và đơn vị tính — tồn kho luôn bắt đầu từ 0, thêm qua Nhập kho");
 %>
 <jsp:include page="/views/common/header.jsp" />
 
@@ -44,19 +44,23 @@
                            maxlength="20" placeholder="kg, lít, quả..."
                            value="${ingredient.unit}">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">
-                        <c:choose>
-                            <c:when test="${not empty ingredient}">Tồn kho hiện tại</c:when>
-                            <c:otherwise>Tồn kho ban đầu</c:otherwise>
-                        </c:choose>
-                    </label>
-                    <input type="number" name="quantityInStock" class="form-control"
-                           step="0.01" min="0" placeholder="0.00"
-                           value="${ingredient.quantityInStock}">
-                    <p class="form-hint">Số lượng nhập/xuất sau này sẽ tự cộng trừ vào đây.</p>
-                </div>
+                <c:if test="${not empty ingredient}">
+                    <div class="form-group">
+                        <label class="form-label">Tồn kho hiện tại</label>
+                        <input type="text" class="form-control" disabled
+                               value="${ingredient.quantityInStockDisplay}">
+                        <p class="form-hint">Không sửa được ở đây — vào "Nhập kho" để thêm, hoặc "Sử dụng hôm nay" để trừ, cho mọi số lượng đều truy vết được.</p>
+                    </div>
+                </c:if>
             </div>
+
+            <c:if test="${empty ingredient}">
+                <div class="alert alert-warn" style="margin-top:4px;">
+                    Nguyên liệu đã có tồn kho sẵn vui lòng vào
+                    <a href="${pageContext.request.contextPath}/ingredient-import/form">Nhập kho</a>
+            
+                </div>
+            </c:if>
 
             <div class="flex gap-12" style="margin-top:22px;">
                 <button type="submit" class="btn btn-primary">

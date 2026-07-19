@@ -2,9 +2,11 @@ package com.mycompany.kindergartenkitchen.controller;
 
 import com.mycompany.kindergartenkitchen.model.Ingredient;
 import com.mycompany.kindergartenkitchen.model.IngredientUsage;
+import com.mycompany.kindergartenkitchen.model.UsageComparisonRow;
 import com.mycompany.kindergartenkitchen.service.IngredientCalculatorService;
 import com.mycompany.kindergartenkitchen.service.IngredientService;
 import com.mycompany.kindergartenkitchen.service.IngredientUsageService;
+import com.mycompany.kindergartenkitchen.service.MealCountService;
 import com.mycompany.kindergartenkitchen.service.impl.IngredientCalculatorServiceImpl;
 import com.mycompany.kindergartenkitchen.service.impl.IngredientServiceImpl;
 import com.mycompany.kindergartenkitchen.service.impl.IngredientUsageServiceImpl;
@@ -24,7 +26,7 @@ import java.util.List;
  * Controller (Servlet) ghi nhận nguyên liệu đã dùng mỗi ngày (dành cho nhân
  * viên bếp).
  */
-@WebServlet(name = "IngredientUsageServlet", urlPatterns = {"/ingredient-usage/*"})
+@WebServlet(name = "IngredientUsageServlet", urlPatterns = {"/ingredient-usage/*", "/ingredient-usage"})
 public class IngredientUsageServlet extends HttpServlet {
 
     private static final String VIEW_LIST = "/jsp/ingredient/usage-list.jsp";
@@ -33,6 +35,7 @@ public class IngredientUsageServlet extends HttpServlet {
     private final IngredientUsageService ingredientUsageService = new IngredientUsageServiceImpl();
     private final IngredientService ingredientService = new IngredientServiceImpl();
     private final IngredientCalculatorService ingredientCalculatorService = new IngredientCalculatorServiceImpl();
+    private final MealCountService mealCountService = new MealCountService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -47,6 +50,9 @@ public class IngredientUsageServlet extends HttpServlet {
             switch (action) {
                 case "/form":
                     handleShowForm(request, response);
+                    break;
+                case "/do":
+                    handleListToday(request, response);
                     break;
                 default:
                     handleListToday(request, response);
@@ -70,14 +76,24 @@ public class IngredientUsageServlet extends HttpServlet {
         }
         Integer currentUserId = authUser.getUserId();
 
-        int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
-        double quantityUsed = parseDoubleOrZero(request.getParameter("quantityUsed"));
+        String action = request.getParameter("action");
         String note = request.getParameter("note");
-        Date usageDate = Date.valueOf(java.time.LocalDate.now());
+        double quantityUsed = parseDoubleOrZero(request.getParameter("quantityUsed"));
 
-        ingredientUsageService.recordUsage(ingredientId, quantityUsed, usageDate, currentUserId, note);
-
-        response.sendRedirect(request.getContextPath() + "/ingredient-usage/today");
+        if ("update".equals(action)) {
+            int usageId = Integer.parseInt(request.getParameter("usageId"));
+            ingredientUsageService.updateUsage(usageId, quantityUsed, note);
+            response.sendRedirect(request.getContextPath() + "/ingredient-usage/today?updated=true");
+        } else if ("delete".equals(action)) {
+            int usageId = Integer.parseInt(request.getParameter("usageId"));
+            ingredientUsageService.deleteUsage(usageId);
+            response.sendRedirect(request.getContextPath() + "/ingredient-usage/today?deleted=true");
+        } else {
+            int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
+            Date usageDate = Date.valueOf(java.time.LocalDate.now());
+            ingredientUsageService.recordUsage(ingredientId, quantityUsed, usageDate, currentUserId, note);
+            response.sendRedirect(request.getContextPath() + "/ingredient-usage/today");
+        }
     }
 
     private void handleListToday(HttpServletRequest request, HttpServletResponse response)
@@ -87,16 +103,17 @@ public class IngredientUsageServlet extends HttpServlet {
         List<IngredientUsage> usageList = ingredientUsageService.getUsageByDate(today);
         request.setAttribute("usageList", usageList);
 
-        // So sánh cần dùng (theo công thức món trong thực đơn hôm nay + số suất
-        // ăn thực tế) với thực tế đã ghi nhận dùng. Nếu chưa có thực đơn/điểm
-        // danh cho hôm nay (module khác chưa có dữ liệu) thì bỏ qua, không làm
-        // hỏng trang ghi nhận sử dụng của bếp.
+      
         try {
-            Map<String, Double> comparisonMap = ingredientCalculatorService.compareNeededVersusActualUsage(today);
-            request.setAttribute("comparisonMap", comparisonMap);
+            List<UsageComparisonRow> comparisonList = ingredientCalculatorService.getUsageComparisonDetails(today);
+            request.setAttribute("comparisonList", comparisonList);
         } catch (SQLException exception) {
             request.setAttribute("comparisonUnavailable", true);
         }
+
+        // Số suất ăn hôm nay (dựa trên điểm danh thực tế) — hiển thị cho bếp dễ hình dung quy mô nấu
+        request.setAttribute("totalMealCount", mealCountService.getTotalMealCount(today));
+        request.setAttribute("mealCountByLevel", mealCountService.getMealCountByLevel(today));
 
         request.getRequestDispatcher(VIEW_LIST).forward(request, response);
     }

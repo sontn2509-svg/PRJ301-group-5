@@ -61,14 +61,66 @@ public class IngredientUsageServiceImpl implements IngredientUsageService {
     }
 
     @Override
-    public boolean updateUsage(int usageId, double quantityUsed, String note) {
-        IngredientUsage ingredientUsage = new IngredientUsage();
-        ingredientUsage.setUsageId(usageId);
-        ingredientUsage.setQuantityUsed(quantityUsed);
-        ingredientUsage.setNote(note);
-
+    public boolean updateUsage(int usageId, double newQuantityUsed, String note) {
+        if (newQuantityUsed <= 0) {
+            return false;
+        }
         try {
-            return ingredientUsageDao.update(ingredientUsage);
+            // Lấy bản ghi cũ để tính chênh lệch tồn kho
+            IngredientUsage old = ingredientUsageDao.findById(usageId);
+            if (old == null) {
+                return false;
+            }
+
+            // QUAN TRỌNG: phải đọc số lượng CŨ ra biến riêng TRƯỚC khi gọi
+            // setQuantityUsed() — nếu không, old.getQuantityUsed() ở dưới sẽ
+            // trả về số MỚI (vì cùng 1 object), khiến diff luôn = 0.
+            double oldQuantityUsed = old.getQuantityUsed();
+
+            // Cập nhật bản ghi
+            old.setQuantityUsed(newQuantityUsed);
+            old.setNote(note);
+            boolean updated = ingredientUsageDao.update(old);
+            if (!updated) {
+                return false;
+            }
+
+            // Vá tồn kho: hoàn lại số cũ rồi trừ số mới
+            Ingredient ingredient = ingredientDao.findById(old.getIngredientId());
+            if (ingredient == null) {
+                return false;
+            }
+            double diff = newQuantityUsed - oldQuantityUsed;
+            double newStock = Math.max(0, ingredient.getQuantityInStock() - diff);
+            return ingredientDao.updateStock(old.getIngredientId(), newStock);
+
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteUsage(int usageId) {
+        try {
+            // Lấy bản ghi trước khi xoá để hoàn lại tồn kho
+            IngredientUsage usage = ingredientUsageDao.findById(usageId);
+            if (usage == null) {
+                return false;
+            }
+
+            boolean deleted = ingredientUsageDao.delete(usageId);
+            if (!deleted) {
+                return false;
+            }
+
+            // Hoàn lại tồn kho số đã dùng
+            Ingredient ingredient = ingredientDao.findById(usage.getIngredientId());
+            if (ingredient == null) {
+                return true; // đã xoá record, nguyên liệu bị mất thì bỏ qua
+            }
+            double restoredStock = ingredient.getQuantityInStock() + usage.getQuantityUsed();
+            return ingredientDao.updateStock(usage.getIngredientId(), restoredStock);
+
         } catch (SQLException exception) {
             return false;
         }

@@ -13,7 +13,7 @@ import java.util.List;
 
 public class IngredientDaoImpl implements IngredientDao {
 
-    // Tạo đối tượng DBContext dùng chung cho toàn bộ Class
+    // Tạo đối tượng DBContext dùng chung cho toàn bộ Class./
     private final DBContext db = new DBContext();
 
     private static final String SQL_FIND_ALL
@@ -42,6 +42,10 @@ public class IngredientDaoImpl implements IngredientDao {
             = "SELECT IngredientID, IngredientName, Unit, QuantityInStock, Status "
             + "FROM Ingredients WHERE Status = 1 AND QuantityInStock <= ? "
             + "ORDER BY QuantityInStock ASC";
+
+    private static final String SQL_FIND_BY_NAME
+            = "SELECT IngredientID, IngredientName, Unit, QuantityInStock, Status "
+            + "FROM Ingredients WHERE LTRIM(RTRIM(IngredientName)) = LTRIM(RTRIM(?))";
 
     @Override
     public List<Ingredient> findAll() throws SQLException {
@@ -154,6 +158,23 @@ public class IngredientDaoImpl implements IngredientDao {
             throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
         }
         return ingredientList;
+    }
+
+    @Override
+    public Ingredient findByName(String ingredientName) throws SQLException {
+        try (Connection connection = db.getConnection();
+                PreparedStatement statement = connection.prepareStatement(SQL_FIND_BY_NAME)) {
+
+            statement.setString(1, ingredientName);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToIngredient(resultSet);
+                }
+            }
+        } catch (Exception e) {
+            throw new SQLException("Lỗi kết nối DBContext: " + e.getMessage());
+        }
+        return null;
     }
 
     private Ingredient mapResultSetToIngredient(ResultSet resultSet) throws SQLException {

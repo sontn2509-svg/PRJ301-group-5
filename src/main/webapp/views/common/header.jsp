@@ -2,15 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%--
     views/common/header.jsp
-    ------------------------------------------------------------------
-    LAYOUT TẠM THỜI — chờ P1 bàn giao bản chính thức (giống sidebar.jsp).
-    File này mở thẻ <html>, <head>, nạp CSS chung, và mở khung
-    .app-shell + topbar. Mỗi trang JSP nội dung PHẢI đóng lại bằng
-    views/common/footer.jsp ở cuối file.
 
-    Biến mỗi trang JSP cần set TRƯỚC khi include file này:
-      request.setAttribute("pageTitle", "Tiêu đề trang");
-      request.setAttribute("pageSub", "Mô tả ngắn (tuỳ chọn)");
 --%>
 <%
     String pageTitle = (String) request.getAttribute("pageTitle");

@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * DAO Rules: bắt buộc sử dụng Interface.
+ * DAO Rules: bắt buộc sử dụng Interface../
  * Định nghĩa các thao tác CRUD cho bảng Ingredients.
  */
 public interface IngredientDao {
@@ -23,4 +23,6 @@ public interface IngredientDao {
     boolean updateStock(int ingredientId, double newQuantity) throws SQLException;
 
     List<Ingredient> findLowStock(double threshold) throws SQLException;
+
+    Ingredient findByName(String ingredientName) throws SQLException;
 }
